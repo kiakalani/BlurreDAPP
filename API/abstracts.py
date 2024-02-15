@@ -17,8 +17,7 @@ class BP:
         self.__bp = Blueprint(name, __name__, url_prefix=f'/{name}')
 
     @staticmethod
-    @property
-    def db(self) -> db.DBComps:
+    def db() -> db.DBComps:
         """
         Getter method for accessing the database.
         :return: The database components of the application
@@ -60,7 +59,7 @@ class BP:
                                 else the_func()
         return funcs
 
-    def create_tmp_func(self, cmps):
+    def create_tmp_func(self, n, cmps):
         """
         Creates the function that combines all of the methods
         for the given route.
@@ -109,7 +108,7 @@ class BP:
                 
                 # Setting up the combiend functions for the operations.
                 for n, cmps in final_funcs[fname].items():
-                    cmbd_func = self.create_tmp_func(cmps)
+                    cmbd_func = self.create_tmp_func(n, cmps)
                     final_funcs[fname][n]['function'] = cmbd_func    
                     
 
@@ -140,4 +139,3 @@ class BP:
                     t_rt, t_rt, view_func = comps['function'], methods=comps['method']
                 )
         current_app.register_blueprint(self.__bp)
-
