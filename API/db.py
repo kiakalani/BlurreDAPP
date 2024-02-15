@@ -15,7 +15,7 @@ class DBComps(TypedDict):
     base: DeclarativeBase
     destroy: any
 
-def init_db(env_name='DBPATH') -> DBComps:
+def init_db(env_name='SQLDB') -> DBComps:
     """
     Returns the dictionary containing the
     needed variables of SQLAlchemy database.
@@ -25,6 +25,7 @@ def init_db(env_name='DBPATH') -> DBComps:
     instances.
     """
     path = os.environ.get(env_name)
+
     if not path:
         print('Error connecting to database. Invalid path provided')
         return {

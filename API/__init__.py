@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 
 import db
@@ -13,10 +14,14 @@ def get_app() -> Flask:
 
     app = Flask('API', static_folder='static')
     app.config['DB'] = db.init_db()
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 
     with app.app_context():
-        from auth import Authorization
+        db.load_orms(app)
+
+        from auth import Authorization, init_login_manager
         Authorization().register_all()
+        init_login_manager()
 
     @app.teardown_appcontext
     def rm_sess(exception=None):
