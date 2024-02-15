@@ -83,34 +83,58 @@ class BP:
                     if not funcs[method].get(route):
                         funcs[method][route] = [the_func] if inspect.getfullargspec(the_func).annotations.get('return') != list else the_func()
         return funcs
+
     def assemble_functions(self):
         funcs = self.group_functions()
         final_funcs = {}
         for method, functions  in funcs.items():
+            method = method.upper()
             for fname in functions:
+
                 for f in functions[fname]:
                     if not final_funcs.get(fname):
                         final_funcs[fname] = {}
                     num_args = len(inspect.getfullargspec(f).args)
-                    print(num_args)
-                    # This function combines the code for the method and arguments
-                    def func(*args, **kvargs):
-                        if request.method == method.upper():
-                            return f(*args, **kvargs)
-                        else:
-                            the_function = final_funcs.get(fname).get(num_args)
-                            if the_function:
-                                the_function(*args, **kvargs)
+                    print(num_args)                    
+            
+                    if not final_funcs[fname].get(num_args):
+                        final_funcs[fname][num_args] = {'method': [method], 'functions': [f]}
+                    else:
+                        final_funcs[fname][num_args]['method'].append(method)
+                        final_funcs[fname][num_args]['functions'].append(f)
+                
+                for n, cmps in final_funcs[fname].items():
+                    def cmbd_func(*args, **kwargs):
+                        for i in range(len(cmps['functions'])):
+                            if request.method == cmps['method'][i]:
+                                return cmps['functions'][i](*args, **kwargs)
+                        
+                    final_funcs[fname][n]['function'] = cmbd_func
+        import pprint; pprint.pprint(final_funcs)
+                    
+                            
+                    
 
-                    final_funcs[fname][num_args] = func
         return final_funcs
 
 
 
 
     def register_all(self):
-        print(self.assemble_functions())
-        # for func in dir(self):
-        #     self.register_method(getattr(self, func))
-        # current_app.register_blueprint(self.__bp)
+        funcs_to_register = self.assemble_functions()
+        print(funcs_to_register)
+        for route, contents in funcs_to_register.items():
+            route = '/' + route
+            if route != '/':
+                route += '/'
+            for nparams, comps in contents.items():
+                t_rt = route
+                for i in range(nparams):
+                    t_rt += f'<arg{i}>/'
+                print(comps)
+                print(t_rt)
+                self.__bp.add_url_rule(
+                    t_rt, t_rt, view_func = comps['function'], methods=comps['method']
+                )
+        current_app.register_blueprint(self.__bp)
 
