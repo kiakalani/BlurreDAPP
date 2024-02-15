@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 244, 53, 158)),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 244, 53, 158)),
         useMaterial3: true,
       ),
       home: const LoginPage(), 
@@ -55,7 +55,9 @@ class LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     double fieldWidth = MediaQuery.of(context).size.width * 0.3; // 30% of screen width
-    if (Platform.isIOS || Platform.isAndroid) {
+    if (kIsWeb) {
+      fieldWidth = MediaQuery.of(context).size.width * 0.3;
+    } else if (Platform.isIOS || Platform.isAndroid) {
       fieldWidth = MediaQuery.of(context).size.width * 0.8;
     }
     return Scaffold(
