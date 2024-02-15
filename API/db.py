@@ -1,9 +1,21 @@
 import os
+from typing import TypedDict
 
+from flask import Flask, current_app
 from sqlalchemy import create_engine, Engine
-from sqlalchemy.orm import scoped_session, sessionmaker, declarative_base
+from sqlalchemy.orm import scoped_session, sessionmaker, declarative_base, DeclarativeBase, Session
 
-def init_db(env_name='DBPATH') -> dict:
+class DBComps(TypedDict):
+    """
+    The database dictionary with the
+    required components.
+    """
+    engine: Engine
+    session: Session
+    base: DeclarativeBase
+    destroy: any
+
+def init_db(env_name='DBPATH') -> DBComps:
     """
     Returns the dictionary containing the
     needed variables of SQLAlchemy database.
@@ -15,5 +27,39 @@ def init_db(env_name='DBPATH') -> dict:
     path = os.environ.get(env_name)
     if not path:
         print('Error connecting to database. Invalid path provided')
-        return {}
+        return {
+            'engine': None,
+            'session': None,
+            'base': None
+        }
     
+    # Creating the needed variables for the database
+    engine = create_engine(f'sqlite:///{env_name}')
+    session = scoped_session(sessionmaker(autoflush=False, bind=engine))
+    base = declarative_base()
+    base.query = session.query_property()
+
+    return {
+        'engine': engine,
+        'session': session,
+        'base': base,
+        'destroy': lambda : session.remove()
+    }
+
+
+def load_orms(app: Flask) -> None:
+    """
+    Adding all of the orms to the database.
+    :param: app: The flask application
+    :return: None
+    """
+    from auth import User
+    db_inf: DBComps = app.config['DB']
+    db_inf['base'].metadata.create_all(bind=db_inf['engine'])
+
+def get_db() -> DBComps:
+    """
+    Getter for components of the database.
+    :return: The components of the database.
+    """
+    return current_app.config['DB']

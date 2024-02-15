@@ -1,6 +1,8 @@
 from flask import Flask
 
-app = Flask('API', static_folder='static')
+import db
+
+    
 
 def get_app() -> Flask:
     """
@@ -10,12 +12,18 @@ def get_app() -> Flask:
     """
 
     app = Flask('API', static_folder='static')
+    app.config['DB'] = db.init_db()
+
     with app.app_context():
-        pass
+        from auth import Authorization
+        Authorization().register_all()
+
+    @app.teardown_appcontext
+    def rm_sess(exception=None):
+        if app.config['DB'].get('destroy'):
+            app.config['DB']['destroy']()
+
     return app
-app.route('/api')
-def handle_api():
-    return ''
 
 
 if __name__ == '__main__':
