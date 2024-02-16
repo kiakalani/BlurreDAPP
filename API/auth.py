@@ -1,7 +1,7 @@
 import inspect
 
 from flask_login import UserMixin, LoginManager, login_user, current_user, logout_user
-from flask import request, jsonify, current_app
+from flask import request, jsonify, current_app, make_response
 from werkzeug.security import generate_password_hash,\
     check_password_hash
 
@@ -61,7 +61,10 @@ class Authorization(abstracts.BP):
 
         if pass_correct:
             login_user(user)
-            return jsonify({'message': 'Login Successful'}), 200
+            response = make_response(jsonify({'message': 'Login Successful'}))
+            response.set_cookie('your_cookie_name', 'cookie_value')
+            return response, 200
+        
         return jsonify({'message': 'Bad request'}), 400
 
     @staticmethod

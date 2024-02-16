@@ -1,6 +1,7 @@
 import inspect
 import re
 from flask import current_app, Blueprint, request
+from flask_cors import cross_origin
 
 import db
 
@@ -67,7 +68,7 @@ class BP:
         :return: A combined function that contains all the
         operations for different methods.
         """
-
+        @cross_origin(supports_credentials=True)
         def ret_func(*args, **kwargs):
             for i in range(len(cmps['functions'])):
                 if request.method == cmps['method'][i]:

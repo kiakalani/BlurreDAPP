@@ -1,8 +1,51 @@
 import 'dart:io';
+import 'dart:js_interop';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as developer;
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:dio/dio.dart';
+import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:cookie_jar/cookie_jar.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:js' as js;
+
+String? getCookie(String name) {
+  // Check if running on the web
+  if (kIsWeb) {
+    // Use JavaScript interop to get the cookie
+    final result = js.context.callMethod('getCookie', [name]);
+    return result?.toString();
+  } else {
+    // Placeholder for non-web platforms; adjust based on your cookie management strategy
+    return null;
+  }
+}
+
+class NetworkService {
+  late Dio _dio;
+
+  NetworkService() {
+    _dio = Dio();
+
+    if (!kIsWeb) {
+      // For platforms other than web, use dio_cookie_manager to manage cookies
+      _dio.interceptors.add(CookieManager(CookieJar()));
+    }
+    // On the web, cookies are automatically managed by the browser
+  }
+
+  Future<Response> getRequest(String url) async {
+    return _dio.get(url);
+  }
+
+  Future<Response> postRequest(String url, Map<String, dynamic> data) async {
+    return _dio.post(url, data: data, with);
+  }
+}
+var net = NetworkService();
 
 void main() {
   runApp(const MyApp());
@@ -74,8 +117,35 @@ class LoginSuccessfullyPage extends StatelessWidget {
         title: const Text('Login Successfully Page'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
-      body: const Center(
-        child: Text('You\'ve logged in successfully.'),
+      body: Center(
+        child: TextButton(
+          onPressed: () => {
+            net.postRequest('http://localhost:3001/auth/signout/', {}).then((resp) => {
+              if (resp.statusCode == 200) {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginPage()))
+              }
+            })
+            // client.post(
+            //   Uri.parse('http://localhost:3001/auth/signout/'),
+            //   headers: {"Content-Type": "application/json"},
+            // ).then((response) => {
+            //   if (response.statusCode == 200) {
+            //     print(response.body),
+            //     Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginPage()))
+            //   } else {
+            //     print(response.body)
+            //   }
+            // })
+            // http.post(Uri.parse('http://127.0.0.1:5000/auth/signout/')).then((value) => {
+            //   if (value.statusCode == 200) {
+            //     Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginPage()))
+            //   } else {
+            //     developer.log(value.body)
+            //   }
+            // })
+          },
+          child: const Text('Log out'),
+        ),
       ),
     );
   }
@@ -147,9 +217,26 @@ class SignupPageState extends State<SignupPage> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
+                  http.post(
+                    Uri.parse("http://127.0.0.1:5000/auth/signup/"),
+                    headers: {"Content-Type": "application/json"},
+                    body: jsonEncode({
+                      "username": _emailController.text,
+                      "password": _passwordController.text
+                    })
+                  ).then((value) => {
+                    if (value.statusCode == 200) {
+                      developer.log(value.body),
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const SignupSuccessfullyPage()
+                        )
+                      )
+                    }
+                  });
                   developer.log('Username: ${_emailController.text}, Password: ${_passwordController.text}',
                     name: 'SignupPage');
-                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SignupSuccessfullyPage()));
+                  
                 },
                 child: const Text(
                   'Sign Up',
@@ -215,9 +302,49 @@ class LoginPageState extends State<LoginPage> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
+                  net.postRequest('http://localhost:3001/auth/signin/', {
+                    "username": _emailController.text,
+                    "password": _passwordController.text,
+                  }).then((resp) => {
+                    print(getCookie('your_cookie_name')),
+                    if (resp.statusCode == 200) {
+                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => const LoginSuccessfullyPage()))
+                      }
+                  });
+                  // client.post(
+                  //   Uri.parse('http://localhost:3001/auth/signin/',), 
+                  //   body: jsonEncode({
+                  //   "username": _emailController.text,
+                  //   "password": _passwordController.text,
+                  //   }),
+                  //   headers: {"Content-Type": "application/json"},
+                  // ).then((response) => {
+                  //     if (response.statusCode == 200) {
+                  //       Navigator.of(context).push(MaterialPageRoute(builder: (context) => const LoginSuccessfullyPage()))
+                  //     }
+                  //   // print(response.),
+                  //   // print(response.headers.map['set-cookie'].toString())
+                  // });
+                  // http.post(
+                  //   Uri.parse('http://127.0.0.1:5000/auth/signin/'),
+                  //   headers: {"Content-Type": "application/json"},
+                  //   body: jsonEncode({
+                  //     "username": _emailController.text,
+                  //     "password": _passwordController.text,
+                  //   }),
+                  // ).then(
+                  //   (value) => {
+                  //     if (value.statusCode == 200) {
+                  //       developer.log(value.headers.toString())
+                  //       // storage.write(key: 'session', value: 'your_session_token_or_cookie').then((_) => {
+                  //       //   Navigator.of(context).push(MaterialPageRoute(builder: (context) => const LoginSuccessfullyPage()))
+                  //       // })
+                  //     }
+                  //   }
+                  // );
                   developer.log('Username: ${_emailController.text}, Password: ${_passwordController.text}',
                     name: 'LoginPage');
-                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => const LoginSuccessfullyPage()));
+                 
                 },
                 child: const Text(
                   'Login',
