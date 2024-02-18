@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dio/browser.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as developer;
@@ -12,13 +13,17 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 class NetworkService {
   late Dio _dio;
+  late BrowserHttpClientAdapter _adapter;
 
   NetworkService() {
     _dio = Dio();
-
     if (!kIsWeb) {
       // For platforms other than web, use dio_cookie_manager to manage cookies
       _dio.interceptors.add(CookieManager(CookieJar()));
+    } else {
+      _adapter = BrowserHttpClientAdapter();
+      _adapter.withCredentials = true;
+      _dio.httpClientAdapter = _adapter;
     }
     // On the web, cookies are automatically managed by the browser
   }
@@ -210,22 +215,37 @@ class SignupPageState extends State<SignupPage> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  http
-                      .post(Uri.parse("http://127.0.0.1:5000/auth/signup/"),
-                          headers: {"Content-Type": "application/json"},
-                          body: jsonEncode({
-                            "username": _emailController.text,
-                            "password": _passwordController.text
-                          }))
-                      .then((value) => {
-                            if (value.statusCode == 200)
-                              {
-                                developer.log(value.body),
-                                Navigator.of(context).push(MaterialPageRoute(
-                                    builder: (context) =>
-                                        const SignupSuccessfullyPage()))
-                              }
-                          });
+                  net.postRequest("http://localhost:3001/auth/signup/", {
+                    "username": _emailController.text,
+                    "password": _passwordController.text
+                  }).then(
+                    (value) => {
+                      if (value.statusCode == 200)
+                        {
+                          developer.log(value.headers.toString()),
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) =>
+                                  const SignupSuccessfullyPage()))
+                        }
+                    },
+                  );
+                  // http
+                  //     .post(Uri.parse("http://localhost:3001/auth/signup/"),
+                  //         headers: {"Content-Type": "application/json"},
+                  //         body: jsonEncode({
+                  //           "username": _emailController.text,
+                  //           "password": _passwordController.text
+                  //         }))
+                  //     .then((value) => {
+                  //           print(value.body),
+                  //           if (value.statusCode == 200)
+                  //             {
+                  //               developer.log(value.body),
+                  //               Navigator.of(context).push(MaterialPageRoute(
+                  //                   builder: (context) =>
+                  //                       const SignupSuccessfullyPage()))
+                  //             }
+                  //         });
                   developer.log(
                       'Username: ${_emailController.text}, Password: ${_passwordController.text}',
                       name: 'SignupPage');
@@ -301,6 +321,7 @@ class LoginPageState extends State<LoginPage> {
                   }).then((resp) => {
                         if (resp.statusCode == 200)
                           {
+                            print(resp.headers.map.toString()),
                             Navigator.of(context).push(MaterialPageRoute(
                                 builder: (context) =>
                                     const LoginSuccessfullyPage()))

@@ -58,11 +58,12 @@ class Authorization(abstracts.BP):
         if not user:
             return jsonify({'message': 'Bad Request'}), 400
         pass_correct = check_password_hash(user.password, passwd)
-
+        print(user.name)
         if pass_correct:
             login_user(user)
             response = make_response(jsonify({'message': 'Login Successful'}))
             response.set_cookie('your_cookie_name', 'cookie_value')
+            response.headers.add('SameSite', 'None')
             return response, 200
         
         return jsonify({'message': 'Bad request'}), 400

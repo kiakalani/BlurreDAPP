@@ -16,8 +16,8 @@ def get_app() -> Flask:
     app.config['DB'] = db.init_db()
     app.config['DEBUG'] = False
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
-    app.config['SESSION_COOKIE_SECURE'] = False  # Only send cookies over HTTPS
-    app.config['SESSION_COOKIE_SAMESITE'] = 'None'  # Allow cookies to be sent with cross-site requests
+    # app.config['SESSION_COOKIE_SECURE'] = False  # Only send cookies over HTTPS
+    # app.config['SESSION_COOKIE_SAMESITE'] = 'None'  # Allow cookies to be sent with cross-site requests
     with app.app_context():
         db.load_orms(app)
 
