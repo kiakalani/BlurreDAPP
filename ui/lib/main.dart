@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:js_interop';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -10,19 +9,6 @@ import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'dart:js' as js;
-
-String? getCookie(String name) {
-  // Check if running on the web
-  if (kIsWeb) {
-    // Use JavaScript interop to get the cookie
-    final result = js.context.callMethod('getCookie', [name]);
-    return result?.toString();
-  } else {
-    // Placeholder for non-web platforms; adjust based on your cookie management strategy
-    return null;
-  }
-}
 
 class NetworkService {
   late Dio _dio;
@@ -42,9 +28,10 @@ class NetworkService {
   }
 
   Future<Response> postRequest(String url, Map<String, dynamic> data) async {
-    return _dio.post(url, data: data, with);
+    return _dio.post(url, data: data);
   }
 }
+
 var net = NetworkService();
 
 void main() {
@@ -59,11 +46,12 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 244, 53, 158)),
+        colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color.fromARGB(255, 244, 53, 158)),
         useMaterial3: true,
       ),
-      //home: const LoginPage(), 
-      home: const HomePage(), 
+      //home: const LoginPage(),
+      home: const HomePage(),
     );
   }
 }
@@ -77,12 +65,12 @@ class HomePage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Home Page'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-
         actions: [
           TextButton(
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginPage())),
+            onPressed: () => Navigator.push(
+                context, MaterialPageRoute(builder: (_) => const LoginPage())),
             child: const Text('Log In', style: TextStyle(color: Colors.white)),
-          ),      
+          ),
         ],
       ),
       body: const Center(
@@ -91,7 +79,6 @@ class HomePage extends StatelessWidget {
     );
   }
 }
-
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -120,11 +107,16 @@ class LoginSuccessfullyPage extends StatelessWidget {
       body: Center(
         child: TextButton(
           onPressed: () => {
-            net.postRequest('http://localhost:3001/auth/signout/', {}).then((resp) => {
-              if (resp.statusCode == 200) {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginPage()))
-              }
-            })
+            net.postRequest('http://localhost:3001/auth/signout/', {}).then(
+                (resp) => {
+                      if (resp.statusCode == 200)
+                        {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const LoginPage()))
+                        }
+                    })
             // client.post(
             //   Uri.parse('http://localhost:3001/auth/signout/'),
             //   headers: {"Content-Type": "application/json"},
@@ -174,7 +166,8 @@ class SignupPageState extends State<SignupPage> {
 
   @override
   Widget build(BuildContext context) {
-    double fieldWidth = MediaQuery.of(context).size.width * 0.3; // 30% of screen width
+    double fieldWidth =
+        MediaQuery.of(context).size.width * 0.3; // 30% of screen width
     if (kIsWeb) {
       fieldWidth = MediaQuery.of(context).size.width * 0.3;
     } else if (Platform.isIOS || Platform.isAndroid) {
@@ -213,37 +206,36 @@ class SignupPageState extends State<SignupPage> {
                   ),
                   obscureText: true,
                 ),
-              ),             
+              ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  http.post(
-                    Uri.parse("http://127.0.0.1:5000/auth/signup/"),
-                    headers: {"Content-Type": "application/json"},
-                    body: jsonEncode({
-                      "username": _emailController.text,
-                      "password": _passwordController.text
-                    })
-                  ).then((value) => {
-                    if (value.statusCode == 200) {
-                      developer.log(value.body),
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const SignupSuccessfullyPage()
-                        )
-                      )
-                    }
-                  });
-                  developer.log('Username: ${_emailController.text}, Password: ${_passwordController.text}',
-                    name: 'SignupPage');
-                  
+                  http
+                      .post(Uri.parse("http://127.0.0.1:5000/auth/signup/"),
+                          headers: {"Content-Type": "application/json"},
+                          body: jsonEncode({
+                            "username": _emailController.text,
+                            "password": _passwordController.text
+                          }))
+                      .then((value) => {
+                            if (value.statusCode == 200)
+                              {
+                                developer.log(value.body),
+                                Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (context) =>
+                                        const SignupSuccessfullyPage()))
+                              }
+                          });
+                  developer.log(
+                      'Username: ${_emailController.text}, Password: ${_passwordController.text}',
+                      name: 'SignupPage');
                 },
                 child: const Text(
                   'Sign Up',
                   style: TextStyle(
                     fontSize: 18,
                   ),
-                  ),
+                ),
               ),
             ],
           ),
@@ -259,7 +251,8 @@ class LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    double fieldWidth = MediaQuery.of(context).size.width * 0.3; // 30% of screen width
+    double fieldWidth =
+        MediaQuery.of(context).size.width * 0.3; // 30% of screen width
     if (kIsWeb) {
       fieldWidth = MediaQuery.of(context).size.width * 0.3;
     } else if (Platform.isIOS || Platform.isAndroid) {
@@ -306,13 +299,15 @@ class LoginPageState extends State<LoginPage> {
                     "username": _emailController.text,
                     "password": _passwordController.text,
                   }).then((resp) => {
-                    print(getCookie('your_cookie_name')),
-                    if (resp.statusCode == 200) {
-                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => const LoginSuccessfullyPage()))
-                      }
-                  });
+                        if (resp.statusCode == 200)
+                          {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) =>
+                                    const LoginSuccessfullyPage()))
+                          }
+                      });
                   // client.post(
-                  //   Uri.parse('http://localhost:3001/auth/signin/',), 
+                  //   Uri.parse('http://localhost:3001/auth/signin/',),
                   //   body: jsonEncode({
                   //   "username": _emailController.text,
                   //   "password": _passwordController.text,
@@ -342,20 +337,21 @@ class LoginPageState extends State<LoginPage> {
                   //     }
                   //   }
                   // );
-                  developer.log('Username: ${_emailController.text}, Password: ${_passwordController.text}',
-                    name: 'LoginPage');
-                 
+                  developer.log(
+                      'Username: ${_emailController.text}, Password: ${_passwordController.text}',
+                      name: 'LoginPage');
                 },
                 child: const Text(
                   'Login',
                   style: TextStyle(
                     fontSize: 18,
                   ),
-                  ),
+                ),
               ),
               TextButton(
-                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SignupPage())),
-                    child: const Text('Create your account'),
+                onPressed: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const SignupPage())),
+                child: const Text('Create your account'),
               ),
             ],
           ),
