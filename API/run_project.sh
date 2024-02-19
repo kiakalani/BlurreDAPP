@@ -6,7 +6,6 @@
 venv_n_exists=0
 
 if [ "${VIRTUAL_ENV}" != "$(pwd)/.venv" ]; then
-    echo "Did work!"
     # Create virtual environment if not there
     if [ ! -d ".venv" ]; then
         venv_n_exists=1
@@ -19,8 +18,6 @@ if [ "${VIRTUAL_ENV}" != "$(pwd)/.venv" ]; then
     if [ "${venv_n_exists}" == 1 ]; then
         pip install -r requirements.txt
     fi
-else
-    echo "Source was activated"
 fi
 
 if [ ! -f "db.db" ]; then
