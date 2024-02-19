@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'dart:html' as html;
 import 'package:dio/browser.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +10,7 @@ import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:ui/auth.dart';
 
 class NetworkService {
   late Dio _dio;
@@ -32,6 +33,12 @@ class NetworkService {
     return _dio.get(url);
   }
 
+  bool loggedIn() {
+    String cookie = html.document.cookie.toString();
+    developer.log(cookie);
+    return cookie.contains("session");
+  }
+
   Future<Response> postRequest(String url, Map<String, dynamic> data) async {
     return _dio.post(url, data: data);
   }
@@ -40,6 +47,10 @@ class NetworkService {
 var net = NetworkService();
 
 void main() {
+  Authorization("http://localhost:3001");
+  Authorization().isLoggedIn().then((value) => {
+        developer.log("Logged In is " + value.toString()),
+      });
   runApp(const MyApp());
 }
 
@@ -315,18 +326,29 @@ class LoginPageState extends State<LoginPage> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  net.postRequest('http://localhost:3001/auth/signin/', {
+                  developer.log("Logged In " + net.loggedIn().toString());
+                  Authorization().postRequest("/auth/signin/", {
                     "username": _emailController.text,
                     "password": _passwordController.text,
                   }).then((resp) => {
                         if (resp.statusCode == 200)
                           {
-                            print(resp.headers.map.toString()),
                             Navigator.of(context).push(MaterialPageRoute(
                                 builder: (context) =>
                                     const LoginSuccessfullyPage()))
                           }
                       });
+                  // net.postRequest('http://localhost:3001/auth/signin/', {
+                  //   "username": _emailController.text,
+                  //   "password": _passwordController.text,
+                  // }).then((resp) => {
+                  //       if (resp.statusCode == 200)
+                  //         {
+                  //           Navigator.of(context).push(MaterialPageRoute(
+                  //               builder: (context) =>
+                  //                   const LoginSuccessfullyPage()))
+                  //         }
+                  //     });
                   // client.post(
                   //   Uri.parse('http://localhost:3001/auth/signin/',),
                   //   body: jsonEncode({

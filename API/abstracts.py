@@ -1,6 +1,6 @@
 import inspect
 import re
-from flask import current_app, Blueprint, request
+from flask import current_app, Blueprint, request, make_response, Response
 from flask_cors import cross_origin
 
 import db
@@ -23,8 +23,21 @@ class BP:
         Getter method for accessing the database.
         :return: The database components of the application
         """
+
         db_comps: db.DBComps = current_app.config['DB']
         return db_comps
+    
+    @staticmethod
+    def create_response(message: str) -> Response:
+        """
+        A method for making the responses exclude the same
+        site property.
+        :return: Response
+        """
+
+        resp = make_response(message)
+        resp.headers.add('SameSite', 'None')
+        return resp
 
     def group_functions(self) -> dict:
         """
@@ -68,6 +81,7 @@ class BP:
         :return: A combined function that contains all the
         operations for different methods.
         """
+
         @cross_origin(supports_credentials=True)
         def ret_func(*args, **kwargs):
             for i in range(len(cmps['functions'])):
@@ -124,6 +138,7 @@ class BP:
         corresponding functions for routes.
         :return: None
         """
+
         funcs_to_register = self.assemble_functions()
         print(funcs_to_register)
         for route, contents in funcs_to_register.items():
