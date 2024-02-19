@@ -21,7 +21,6 @@ class LoginPage extends StatefulWidget {
 }
 
 class LoginPageState extends State<LoginPage> {
-  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -44,19 +43,7 @@ class LoginPageState extends State<LoginPage> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(
-                width: fieldWidth, // Control the width here
-                child: TextField(
-                  controller: _usernameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Username',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.name,
-                ),
-              ),
-              const SizedBox(height: 20),
+            children: [            
               SizedBox(
                 width: fieldWidth,
                 child: TextField(
@@ -87,7 +74,6 @@ class LoginPageState extends State<LoginPage> {
                     builder: (context) =>
                         const LoginSuccessfullyPage()));
                   /*net.postRequest('http://localhost:3001/auth/signin/', {                
-                    "username": _usernameController,
                     "email": _emailController,
                     "password": _passwordController.text
                   }).then((resp) => {
@@ -102,7 +88,6 @@ class LoginPageState extends State<LoginPage> {
                   // client.post(
                   //   Uri.parse('http://localhost:3001/auth/signin/',),
                   //   body: jsonEncode({
-                  //    "username": _usernameController,
                   //    "email": _emailController,
                   //    "password": _passwordController.text
                   //   }),
@@ -118,7 +103,6 @@ class LoginPageState extends State<LoginPage> {
                   //   Uri.parse('http://127.0.0.1:5000/auth/signin/'),
                   //   headers: {"Content-Type": "application/json"},
                   //   body: jsonEncode({
-                  //     "username": _usernameController,
                   //     "email": _emailController,
                   //     "password": _passwordController.text,
                   //   }),
@@ -133,7 +117,7 @@ class LoginPageState extends State<LoginPage> {
                   //   }
                   // );
                   developer.log(
-                      'Username: ${_usernameController.text}, Email: ${_emailController.text}, Password: ${_passwordController.text}',
+                      'Email: ${_emailController.text}, Password: ${_passwordController.text}',
                       name: 'LoginPage');
                 },
                 child: const Text(
