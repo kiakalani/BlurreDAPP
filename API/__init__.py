@@ -16,8 +16,6 @@ def get_app() -> Flask:
     app.config['DB'] = db.init_db()
     app.config['DEBUG'] = False
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
-    # app.config['SESSION_COOKIE_SECURE'] = False  # Only send cookies over HTTPS
-    # app.config['SESSION_COOKIE_SAMESITE'] = 'None'  # Allow cookies to be sent with cross-site requests
     with app.app_context():
         db.load_orms(app)
 
@@ -35,4 +33,5 @@ def get_app() -> Flask:
 if __name__ == '__main__':
     app = get_app()
     CORS(app, supports_credentials=True, origins="*")
+    print(os.environ.get('VIRTUAL_ENV'), 'is the activated environment')
     app.run(debug=app.config['DEBUG'], host="0.0.0.0", port=3001)

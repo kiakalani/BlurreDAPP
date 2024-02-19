@@ -35,7 +35,7 @@ def init_db(env_name='SQLDB') -> DBComps:
         }
     
     # Creating the needed variables for the database
-    engine = create_engine(f'sqlite:///{env_name}')
+    engine = create_engine(f'sqlite:///{path}')
     session = scoped_session(sessionmaker(autoflush=False, bind=engine))
     base = declarative_base()
     base.query = session.query_property()
