@@ -9,6 +9,8 @@ import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:ui/auth.dart';
+import 'package:ui/main.dart';
 
 import 'signup.dart';
 import 'profile_setting.dart';
@@ -26,6 +28,13 @@ class LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    Authorization().isLoggedIn().then((logged_in) => {
+          if (logged_in)
+            {
+              Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const HomePage()))
+            }
+        });
     double fieldWidth =
         MediaQuery.of(context).size.width * 0.3; // 30% of screen width
     if (kIsWeb) {
@@ -43,11 +52,12 @@ class LoginPageState extends State<LoginPage> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [            
+            children: [
               SizedBox(
                 width: fieldWidth,
                 child: TextField(
-                  controller: _emailController, // This is now explicitly for the email
+                  controller:
+                      _emailController, // This is now explicitly for the email
                   decoration: const InputDecoration(
                     labelText: 'Email', // Clearly mark it as Email
                     border: OutlineInputBorder(),
@@ -70,52 +80,17 @@ class LoginPageState extends State<LoginPage> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) =>
-                        const LoginSuccessfullyPage()));
-                  /*net.postRequest('http://localhost:3001/auth/signin/', {                
-                    "email": _emailController,
+                  Authorization().postRequest("/auth/signin/", {
+                    "username": _emailController.text,
                     "password": _passwordController.text
                   }).then((resp) => {
                         if (resp.statusCode == 200)
                           {
-                            print(resp.headers.map.toString()),
                             Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) =>
-                                    const LoginSuccessfullyPage()))
+                                builder: (context) => const HomePage()))
                           }
-                      });*/
-                  // client.post(
-                  //   Uri.parse('http://localhost:3001/auth/signin/',),
-                  //   body: jsonEncode({
-                  //    "email": _emailController,
-                  //    "password": _passwordController.text
-                  //   }),
-                  //   headers: {"Content-Type": "application/json"},
-                  // ).then((response) => {
-                  //     if (response.statusCode == 200) {
-                  //       Navigator.of(context).push(MaterialPageRoute(builder: (context) => const LoginSuccessfullyPage()))
-                  //     }
-                  //   // print(response.),
-                  //   // print(response.headers.map['set-cookie'].toString())
-                  // });
-                  // http.post(
-                  //   Uri.parse('http://127.0.0.1:5000/auth/signin/'),
-                  //   headers: {"Content-Type": "application/json"},
-                  //   body: jsonEncode({
-                  //     "email": _emailController,
-                  //     "password": _passwordController.text,
-                  //   }),
-                  // ).then(
-                  //   (value) => {
-                  //     if (value.statusCode == 200) {
-                  //       developer.log(value.headers.toString())
-                  //       // storage.write(key: 'session', value: 'your_session_token_or_cookie').then((_) => {
-                  //       //   Navigator.of(context).push(MaterialPageRoute(builder: (context) => const LoginSuccessfullyPage()))
-                  //       // })
-                  //     }
-                  //   }
-                  // );
+                      });
+
                   developer.log(
                       'Email: ${_emailController.text}, Password: ${_passwordController.text}',
                       name: 'LoginPage');
@@ -151,10 +126,11 @@ class LoginSuccessfullyPage extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           TextButton(
-            onPressed: () => Navigator.push(
-                context, MaterialPageRoute(builder: (_) => const LoginPage())),
-                child: const Text('Log Out', style: TextStyle(color: Colors.white))
-                /*net.postRequest('http://localhost:3001/auth/signout/', {}).then(
+              onPressed: () => Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const LoginPage())),
+              child:
+                  const Text('Log Out', style: TextStyle(color: Colors.white))
+              /*net.postRequest('http://localhost:3001/auth/signout/', {}).then(
                 (resp) => {
                       if (resp.statusCode == 200)
                         {
@@ -182,16 +158,14 @@ class LoginSuccessfullyPage extends StatelessWidget {
             //     developer.log(value.body)
             //   }
             // }),*/
-          ),
+              ),
         ],
       ),
       body: Center(
         child: TextButton(
           onPressed: () => {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const ProfileSettingsPage()))
+            Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const ProfileSettingsPage()))
           },
           child: const Text('Profile Setting'),
         ),

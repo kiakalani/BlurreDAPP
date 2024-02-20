@@ -9,6 +9,8 @@ import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:ui/auth.dart';
+import 'package:ui/main.dart';
 
 import 'login.dart';
 
@@ -99,45 +101,20 @@ class SignupPageState extends State<SignupPage> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) =>
-                      const SignupSuccessfullyPage()));
-                  /*net.postRequest("http://localhost:3001/auth/signup/", {
-                    "username": _usernameController,
-                    "email": _emailController,
+                  Authorization().postRequest("/auth/signup/", {
+                    "username": _emailController.text,
                     "password": _passwordController.text
-                  }).then(
-                    (value) => {
-                      if (value.statusCode == 200)
-                        {
-                          developer.log(value.headers.toString()),
-                          Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) =>
-                                  const SignupSuccessfullyPage()))
-                        }
-                    },
-                  );*/
-                  // http
-                  //     .post(Uri.parse("http://localhost:3001/auth/signup/"),
-                  //         headers: {"Content-Type": "application/json"},
-                  //         body: jsonEncode({
-                  //            "username": _usernameController,
-                  //            "email": _emailController,
-                  //            "password": _passwordController.text
-                  //         }))
-                  //     .then((value) => {
-                  //           print(value.body),
-                  //           if (value.statusCode == 200)
-                  //             {
-                  //               developer.log(value.body),
-                  //               Navigator.of(context).push(MaterialPageRoute(
-                  //                   builder: (context) =>
-                  //                       const SignupSuccessfullyPage()))
-                  //             }
-                  //         });
+                  }).then((value) => {
+                        if (value.statusCode == 200)
+                          {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => const HomePage()))
+                          }
+                      });
+
                   developer.log(
-                    'Username: ${_usernameController.text}, Email: ${_emailController.text}, Password: ${_passwordController.text}',
-                    name: 'SignupPage');
+                      'Username: ${_usernameController.text}, Email: ${_emailController.text}, Password: ${_passwordController.text}',
+                      name: 'SignupPage');
                 },
                 child: const Text(
                   'Sign Up',
