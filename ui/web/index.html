@@ -41,6 +41,14 @@
 </head>
 <body>
   <script>
+    function getCookie(name) {
+      let matches = document.cookie.match(new RegExp(
+        "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+      ));
+      return matches ? decodeURIComponent(matches[1]) : undefined;
+    }
+  </script>
+  <script>
     window.addEventListener('load', function(ev) {
       // Download main.dart.js
       _flutter.loader.loadEntrypoint({
