@@ -1,10 +1,10 @@
 import 'dart:io';
-import 'dart:html' as html;
-import 'package:dio/browser.dart';
-import 'package:flutter/foundation.dart';
+//import 'dart:html' as html;
+//import 'package:dio/browser.dart';
+//import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as developer;
-import 'package:http/http.dart' as http;
+//import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
@@ -14,40 +14,6 @@ import 'package:ui/auth.dart';
 
 import 'login.dart';
 import 'signup.dart';
-
-class NetworkService {
-  late Dio _dio;
-  late BrowserHttpClientAdapter _adapter;
-
-  NetworkService() {
-    _dio = Dio();
-    if (!kIsWeb) {
-      // For platforms other than web, use dio_cookie_manager to manage cookies
-      _dio.interceptors.add(CookieManager(CookieJar()));
-    } else {
-      _adapter = BrowserHttpClientAdapter();
-      _adapter.withCredentials = true;
-      _dio.httpClientAdapter = _adapter;
-    }
-    // On the web, cookies are automatically managed by the browser
-  }
-
-  Future<Response> getRequest(String url) async {
-    return _dio.get(url);
-  }
-
-  bool loggedIn() {
-    String cookie = html.document.cookie.toString();
-    developer.log(cookie);
-    return cookie.contains("session");
-  }
-
-  Future<Response> postRequest(String url, Map<String, dynamic> data) async {
-    return _dio.post(url, data: data);
-  }
-}
-
-var net = NetworkService();
 
 void main() {
   Authorization("http://localhost:3001");
