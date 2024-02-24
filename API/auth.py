@@ -1,4 +1,6 @@
 import inspect
+import datetime
+import re
 
 from flask_login import UserMixin, LoginManager, login_user, current_user, logout_user
 from flask import request, jsonify, current_app, make_response
@@ -7,6 +9,7 @@ from werkzeug.security import generate_password_hash,\
 
 from sqlalchemy import Column, Integer, String
 import abstracts
+import profile_imp
 
 class User(UserMixin, current_app.config['DB']['base']):
     """
@@ -15,12 +18,15 @@ class User(UserMixin, current_app.config['DB']['base']):
     """
 
     __tablename__ = 'user'
-    id = Column(Integer, primary_key=True)
+    email = Column(String, primary_key=True)
     name = Column(String, unique=True)
+    birthday = Column(String)
     password = Column(String, nullable=False)
 
-    def __init__(self, name, password):
+    def __init__(self, email, name, birthday, password):
+        self.email = email
         self.name = name
+        self.birthday = birthday
         self.password = password
 
 def init_login_manager() -> None:
@@ -34,6 +40,35 @@ def init_login_manager() -> None:
     @mgr.user_loader
     def usr_gt(id):
         return User.query.get(int(id))
+    
+def get_age(birthday: datetime.datetime) -> int:
+    """
+    A method to provide the age of the person from their
+    birthday.
+    :param: birthday: a datetime instance specifying the
+    birthday of a person.
+    :return: an integer indicating the age of the person.
+    """
+
+    today = datetime.datetime.now()
+    return today.year - birthday.year - (
+        1 if (
+            (today.month, today.day) < (birthday.month, birthday.day)
+        ) else 0
+    )
+
+def bday_str_to_datetime(bstr: str) -> datetime.datetime:
+    """
+    A method to convert string birthday to a datetime instance.
+    :param: bstr: The string representation of the birthday.
+    :return: a datetime instance containing the birthday
+    """
+
+    bd_p = re.compile(r'^(?P<day>\d\d)-(?P<month>\d\d)-(?P<year>\d\d\d\d)$')
+    m = bd_p.match(bstr)
+    if not m:
+        return None
+    return datetime.datetime(int(m['year']), int(m['month']), int(m['day']))
 
 class Authorization(abstracts.BP):
     """
@@ -110,20 +145,55 @@ class Authorization(abstracts.BP):
             ), 400
 
         json_req = request.get_json()
-        username = json_req.get('username')
+        email = json_req.get('email')
+        name = json_req.get('name')
+        birthday = json_req.get('birthday')
         passwd = json_req.get('password')
+        retype_passwd = json_req.get('repeat_password')
         
         # Validating the provided parameters exist
-        if not username or not passwd:
+        if not email or not passwd or not name or not birthday or not retype_passwd:
             return Authorization.create_response(
                 jsonify({
-                    'message': 'Bad Request'
+                    'message': 'Missing a required field'
                 })
             ), 400
 
-        user = User.query.filter(User.name == username).first()
+        if passwd != retype_passwd:
+            return Authorization.create_response(
+                jsonify({
+                    'message': 'Passwords do not match'
+                })
+            ), 400
 
-        # This means the username already exists. So they should not be
+        if len(passwd) < 6:
+            return Authorization.create_response(
+                jsonify({
+                    'message': 'The password length has to be at least 6 characters'
+                })
+            ), 400
+        
+        bday_dt = bday_str_to_datetime(birthday)
+        if not bday_dt:
+            return Authorization.create_response(
+                jsonify({
+                    'message': 'Invalid syntax provided for birthday'
+                })
+            ), 400
+        
+        if get_age(bday_dt) < 18:
+            return Authorization.create_response(
+                jsonify({
+                    'message': 'You are too young to sign up for this application.'
+                })
+            ), 400
+        
+        
+        
+
+        user = User.query.filter(User.email == email).first()
+
+        # This means the email already exists. So they should not be
         # allowed to create the user
         if user:
             return Authorization.create_response(
@@ -132,8 +202,10 @@ class Authorization(abstracts.BP):
                 })
             ), 400
 
-        new_usr = User(username, generate_password_hash(passwd))
+        new_usr = User(email, name, birthday, generate_password_hash(passwd))
+        new_profile = profile_imp.Profile(email)
         Authorization.db()['session'].add(new_usr)
+        Authorization.db()['session'].add(new_profile)
         Authorization.db()['session'].commit()
 
         return Authorization.create_response(
