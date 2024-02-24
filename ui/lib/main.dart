@@ -11,6 +11,7 @@ import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:ui/auth.dart';
+import 'package:ui/profile_setting.dart';
 
 import 'login.dart';
 import 'signup.dart';
@@ -51,6 +52,11 @@ class HomePage extends StatelessWidget {
         title: const Text('Home Page'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
+          TextButton(
+            onPressed: () => Navigator.push(
+                context, MaterialPageRoute(builder: (_) => const ProfileSettingsPage())),
+            child: const Text('Profile Settings', style: TextStyle(color: Colors.white)),
+          ),
           TextButton(
             onPressed: () => Navigator.push(
                 context, MaterialPageRoute(builder: (_) => const LoginPage())),
