@@ -81,7 +81,7 @@ class LoginPageState extends State<LoginPage> {
               ElevatedButton(
                 onPressed: () {
                   Authorization().postRequest("/auth/signin/", {
-                    "username": _emailController.text,
+                    "email": _emailController.text,
                     "password": _passwordController.text
                   }).then((resp) => {
                         if (resp.statusCode == 200)
