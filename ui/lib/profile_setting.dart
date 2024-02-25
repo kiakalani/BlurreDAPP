@@ -30,6 +30,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
   final List<String> _smokings = ['Socially', 'Never', 'Regularly', 'Trying to quit']; 
   final List<String> _religions = ['None', 'Agnostic', 'Atheist', 'Buddhist', 'Catholic', 'Christian', 'Hindu', 'Jain', 'Jewish', 'Mormon', 'Latter-day Saint', 'Muslim', 'Zoroastrian', 'Sikh', 'Spiritual', 'Other', 'Prefer not to say'];
   final _heightController = TextEditingController();
+  final _bioController = TextEditingController();
 
   Future<void> _pickImage() async {
     final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
@@ -85,9 +86,21 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                     onPressed: _pickImage,
                     child: const Text('Upload Photo'),
                   ),
+                  const SizedBox(height: 20),
+
+                  // Bio field
+                  SizedBox(
+                    width: fieldWidth,
+                    child: TextFormField(
+                      controller: _bioController,
+                      decoration: const InputDecoration(labelText: 'Bio'),
+                      maxLines: null, // Allows the input to expand as much as needed
+                      keyboardType: TextInputType.multiline,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
 
                   // Height field
-                  const SizedBox(height: 20),
                   SizedBox(
                     width: fieldWidth,
                     child: TextFormField(
@@ -267,6 +280,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                           'orientation': _sexOrientation,
                           'looking_for': _lookingFor,
                           'height': _heightController.text,
+                          'bio': _bioController.text,
                           'star_sign': _starSign,
                           'exercise': _exercise,
                           'drinking': _drinking,
