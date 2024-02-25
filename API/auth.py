@@ -18,8 +18,9 @@ class User(UserMixin, current_app.config['DB']['base']):
     """
 
     __tablename__ = 'user'
-    email = Column(String, primary_key=True)
-    name = Column(String, unique=True)
+    id = Column(Integer, primary_key=True)
+    email = Column(String, unique=True)
+    name = Column(String)
     birthday = Column(String)
     password = Column(String, nullable=False)
 
@@ -64,7 +65,7 @@ def bday_str_to_datetime(bstr: str) -> datetime.datetime:
     :return: a datetime instance containing the birthday
     """
 
-    bd_p = re.compile(r'^(?P<day>\d\d)-(?P<month>\d\d)-(?P<year>\d\d\d\d)$')
+    bd_p = re.compile(r'^(?P<month>\d+)-(?P<day>\d+)-(?P<year>\d\d\d\d)$')
     m = bd_p.match(bstr)
     if not m:
         return None
@@ -93,18 +94,17 @@ class Authorization(abstracts.BP):
             ), 400
 
         json_req = request.get_json()
-        username = json_req.get('username')
+        email = json_req.get('email')
         passwd = json_req.get('password')
-
+        print(json_req)
         # Valdiating the provided variables
-        if not username or not passwd:
+        if not email or not passwd:
             return Authorization.create_response(
                 jsonify({
                     'message': 'Bad Request'
                 })
             ), 400
-
-        user = User.query.filter(User.name == username).first()
+        user = User.query.filter(User.email == email).first()
         # Making sure the user exists
         if not user:
             return Authorization.create_response(
@@ -210,7 +210,7 @@ class Authorization(abstracts.BP):
 
         return Authorization.create_response(
             jsonify({
-                'message': 'Successfull'
+                'message': 'Successful'
             })
         ), 200
 

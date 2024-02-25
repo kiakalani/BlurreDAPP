@@ -68,30 +68,37 @@ def valid_checks() -> dict:
 
     return {
         'gender': lambda g : g in [
-            'male', 'female', 'non-binary'
+            'Male', 'Female', 'Other'
         ],
         'orientation': lambda o: o in [
-            'heterosexual',
-            'homosexual',
-            'bisexual'
+            'Straight', 'Gay', 'Lesbian',
+            'Bisexual', 'Asexual', 'Other'
         ],
         'looking_for': lambda l: l in [
-            'short term relationship',
-            'long term relationship',
-            'something casual'
+            'A relationship', 'Something casual', 'New friends',
+            'Not sure yet', 'Prefer not to say'
         ],
         'height': lambda h: h is not None and h.isdigit()\
             and 110 <= int(h) <= 230,
         'star_sign': lambda s: s in [
-            'aries', 'taurus', 'gemini',
-            'cancer', 'leo', 'virgo',
-            'libra', 'scorpio'
+            'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo',
+            'Virgo', 'Libra', 'Scorpio', 'Sagittarius',
+            'Capricorn', 'Aquarius', 'Pisces'
         ],
-        'exercise': a_valid,
-        'drinking': a_valid,
-        'smoking': a_valid,
+        'exercise': lambda e: e in [
+            'Everyday', 'Often', 'Sometimes', 'Never'
+        ],
+        'drinking': lambda d: d in [
+            'Frequently', 'Socially', 'Rarely', 'Never'
+        ],
+        'smoking': lambda s: s in [
+            'Socially', 'Never', 'Regularly', 'Trying to quit'
+        ],
         'religion': lambda r: r in [
-            'agnostic', 'atheist', 'christian', 'muslim'
+            'None', 'Agnostic', 'Atheist', 'Buddhist', 'Catholic',
+            'Christian', 'Hindu', 'Jain', 'Jewish', 'Mormon',
+            'Latter-day Saint', 'Muslim', 'Zoroastrian', 'Sikh',
+            'Spiritual', 'Other', 'Prefer not to say'
         ],
         'picture1': resize_picture,
         'picture2': resize_picture,
@@ -124,7 +131,7 @@ class ProfileBP(abstracts.BP):
         jsons = request.get_json()
 
         # Getting the corresponding profile instance
-        profile = Profile.query.filter(email=current_user.email).first()
+        profile = Profile.query.filter(Profile.email == current_user.email).first()
 
         for item, check_function in checks.items():
             # Value from the post request

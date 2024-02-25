@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:intl/find_locale.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:ui/main.dart';
 import 'dart:convert';
+import 'auth.dart';
 
 class ProfileSettingsPage extends StatefulWidget {
   const ProfileSettingsPage({Key? key}) : super(key: key);
@@ -44,6 +46,13 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+     Authorization().isLoggedIn().then((logged_in) => {
+          if (!logged_in)
+            {
+              Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const HomePage()))
+            }
+        });
     double fieldWidth =
         MediaQuery.of(context).size.width * 0.3; // 30% of screen width
     if (kIsWeb) {
@@ -253,7 +262,22 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
                         _formKey.currentState!.save();
-                        print("Height: ${_heightController.text}, Gender: $_gender, Sex orientation: $_sexOrientation, Looking for: $_lookingFor, Exercise: $_exercise, Star sign: $_starSign, Drinking: $_drinking, Smoking: $_smoking, Religion: $_religion");
+                        Authorization().postRequest('/profile/', {
+                          'gender': _gender,
+                          'orientation': _sexOrientation,
+                          'looking_for': _lookingFor,
+                          'height': _heightController.text,
+                          'star_sign': _starSign,
+                          'exercise': _exercise,
+                          'drinking': _drinking,
+                          'smoking': _smoking,
+                          'religion': _religion,
+                          'picture1': _imageBytes != null ? base64.encode(_imageBytes!) : null,
+                        }).then((resp) => {
+                          if (resp.statusCode == 200) {
+                            // Successfully modified
+                          }
+                        });
                       }
                     },
                     child: const Text('Save'),

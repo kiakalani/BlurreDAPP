@@ -27,7 +27,9 @@ class Authorization {
         _auth!._dio.interceptors.add(CookieManager(CookieJar()));
       } else {
         _auth!._adapter = createHttpClientAdapter();
+        _auth!._adapter.withCredentials = true;
         _auth!._dio.httpClientAdapter = _auth!._adapter;
+
         // For web, just add a http client adapter   
       }
     }
