@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:intl/find_locale.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
 
 class ProfileSettingsPage extends StatefulWidget {
   const ProfileSettingsPage({Key? key}) : super(key: key);
@@ -13,10 +14,10 @@ class ProfileSettingsPage extends StatefulWidget {
 
 class ProfileSettingsPageState extends State<ProfileSettingsPage> {
   final _formKey = GlobalKey<FormState>();
+  Uint8List? _imageBytes;
+  final ImagePicker _picker = ImagePicker();
   // Selected option for profile settings
   String? _gender, _sexOrientation, _lookingFor, _exercise, _starSign, _drinking, _smoking, _religion;
-  // For storing the selected image
-  File? _image; 
   // Dropdown options for profile settings
   final List<String> _genders = ['Male', 'Female', 'Other'];
   final List<String> _orientations = ['Straight', 'Gay', 'Lesbian', 'Bisexual', 'Asexual', 'Other'];
@@ -26,14 +27,17 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
   final List<String> _drinkings = ['Frequently', 'Socially', 'Rarely', 'Never'];
   final List<String> _smokings = ['Socially', 'Never', 'Regularly', 'Trying to quit']; 
   final List<String> _religions = ['None', 'Agnostic', 'Atheist', 'Buddhist', 'Catholic', 'Christian', 'Hindu', 'Jain', 'Jewish', 'Mormon', 'Latter-day Saint', 'Muslim', 'Zoroastrian', 'Sikh', 'Spiritual', 'Other', 'Prefer not to say'];
-  final ImagePicker _picker = ImagePicker();
   final _heightController = TextEditingController();
 
   Future<void> _pickImage() async {
     final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+
     if (pickedFile != null) {
+      final Uint8List imageBytes = await pickedFile.readAsBytes();
+      //String base64Encode(List<int> bytes) => base64.encode(bytes);
+      print(base64.encode(imageBytes));
       setState(() {
-        _image = File(pickedFile.path);
+        _imageBytes = imageBytes;
       });
     }
   }
@@ -62,11 +66,11 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // Upload photo field
-                  if (_image != null)
+                  if (_imageBytes != null)
                     SizedBox(
                       width: 100,
                       height: 100,
-                      child: Image.file(_image!),
+                      child: Image.memory(_imageBytes!),
                     ),
                   ElevatedButton(
                     onPressed: _pickImage,

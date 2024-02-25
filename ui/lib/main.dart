@@ -14,7 +14,6 @@ import 'package:ui/auth.dart';
 import 'package:ui/profile_setting.dart';
 
 import 'login.dart';
-import 'signup.dart';
 
 void main() {
   Authorization("http://localhost:3001");
