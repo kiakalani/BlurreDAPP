@@ -22,6 +22,8 @@ def get_app() -> Flask:
         from auth import Authorization, init_login_manager
         Authorization().register_all()
         init_login_manager()
+        from profile_imp import ProfileBP
+        ProfileBP().register_all()
 
     @app.teardown_appcontext
     def rm_sess(exception=None):
