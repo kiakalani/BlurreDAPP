@@ -12,8 +12,14 @@ import 'package:cookie_jar/cookie_jar.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:ui/auth.dart';
 import 'package:ui/profile_setting.dart';
-
+import 'package:flutter/material.dart';
+import 'swipe.dart';
 import 'login.dart';
+import 'package:flutter/services.dart' show rootBundle;
+
+Future<String> readBase64Image(String assetPath) async {
+  return await rootBundle.loadString(assetPath);
+}
 
 void main() {
   Authorization("http://localhost:3001");
@@ -35,7 +41,6 @@ class MyApp extends StatelessWidget {
             seedColor: const Color.fromARGB(255, 244, 53, 158)),
         useMaterial3: true,
       ),
-      //home: const LoginPage(),
       home: const HomePage(),
     );
   }
@@ -63,8 +68,27 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
-      body: const Center(
-        child: Text('Welcome to Dating App!'),
+      body: FutureBuilder<String>(
+        future: readBase64Image('assets/images/lovely.txt'), 
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasError) {
+              print("Error loading image: ${snapshot.error}");
+              return const Center(child: Text('Error loading image'));            }
+            if (snapshot.hasData) {
+              return Center(
+                child: SwipeableCard(
+                  picture1: snapshot.data!,
+                  name: 'Banana',
+                  birthday: '04-17-2000',
+                  bio: 'Loves hiking, swimming, and reading.',
+                ),
+              );
+            }
+          }
+          // While loading
+          return const Center(child: CircularProgressIndicator());
+        },
       ),
     );
   }
