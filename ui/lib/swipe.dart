@@ -2,13 +2,13 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
-class SwipeableCard extends StatelessWidget {
+class SwipePage extends StatelessWidget {
   final String picture1;
   final String name;
   final String birthday;
   final String bio;
 
-  const SwipeableCard({
+  const SwipePage({
     required this.picture1,
     required this.name,
     required this.birthday,

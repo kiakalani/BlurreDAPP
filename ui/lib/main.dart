@@ -11,6 +11,7 @@ import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:ui/auth.dart';
+import 'package:ui/messages.dart';
 import 'package:ui/profile_setting.dart';
 import 'package:flutter/material.dart';
 import 'swipe.dart';
@@ -58,6 +59,11 @@ class HomePage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.push(
+                context, MaterialPageRoute(builder: (_) => const MessagesPage())),
+            child: const Text('Messages', style: TextStyle(color: Colors.white)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.push(
                 context, MaterialPageRoute(builder: (_) => const ProfileSettingsPage())),
             child: const Text('Profile Settings', style: TextStyle(color: Colors.white)),
           ),
@@ -77,7 +83,7 @@ class HomePage extends StatelessWidget {
               return const Center(child: Text('Error loading image'));            }
             if (snapshot.hasData) {
               return Center(
-                child: SwipeableCard(
+                child: SwipePage(
                   picture1: snapshot.data!,
                   name: 'Banana',
                   birthday: '04-17-2000',
