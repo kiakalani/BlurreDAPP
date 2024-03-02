@@ -159,6 +159,38 @@ class ProfileBP(abstracts.BP):
                 'message': 'Successfully updated the profile'
             })
         ), 200
+    @staticmethod
+    def bp_post_details():
+        # Error checking to make sure the request is valid
+        if current_user.is_anonymous:
+            return jsonify({'message': 'Not authorized'}), 400
+        json = request.get_json()
+        uid = json.get('user_id')
+        if not uid or not uid.isdigit():
+            return jsonify({'message': 'Invalid request'}), 400
+        uid = int(uid)
+        user = auth.User.query.filter(auth.User.id == uid).first()
+        if not user:
+            return jsonify({'message': 'Invalid User'}), 400
+
+        # Getting the profile instance
+        ret_prof: Profile = Profile.query.filter(Profile.email == user.email).first()
+
+        # Getting the details in a dictionary format and replacing
+        # images with base64 encoded versions of them
+        images = get_recepient_images(uid, ret_prof)
+        ret_dict = {
+            c.name: getattr(ret_prof, c.name) \
+                for c in Profile.__table__.columns
+        }
+        for i in range(1, 5):
+            ret_dict[f'picture{i}'] = None
+        for k in images:
+            ret_dict[k] = images[k]
+        return ProfileBP.create_response(jsonify({
+            'message': 'Success',
+            'profile': ret_dict
+        })), 200
 
 
 def get_blur_level(user: int) -> int:
@@ -189,7 +221,7 @@ def get_blur_level(user: int) -> int:
     )
     return max(0, 20 - num_messages)
 
-def get_recepient_images(user: int) -> list[str]:
+def get_recepient_images(user: int, profile: Profile = None) -> dict:
     """
     A method to provide the base64 encoded images with the appropriate
     blur applied to it.
@@ -197,28 +229,36 @@ def get_recepient_images(user: int) -> list[str]:
     :return: A list containing the images corresponding to the user
     that have the blur effect applied to them.
     """
-
+    imgs = {f'picture{i}': None for i in range(1, 5)}
     if current_user.is_anonymous:
-        return []
+        return imgs
     user: auth.User = auth.User.query.filter(auth.User.id == user).first()
     if not user:
-        return []
-    profile: Profile = Profile.query.filter(
-        Profile.email == user.email
-    ).first()
-    imgs = [
-        profile.picture1,
-        profile.picture2,
-        profile.picture3,
-        profile.picture4
-    ]
-    imgs = [Image.frombytes(i) for i in imgs if i is not None]
-    imgs: list[Image.Image] = [
-        i.filter(ImageFilter.GaussianBlur(get_blur_level(user))) for i in imgs
-    ]
-    for i in range(len(imgs)):
+        return imgs
+    if profile is None:
+        profile: Profile = Profile.query.filter(
+            Profile.email == user.email
+        ).first()
+    imgs: dict[str, Image.Image] = {
+        f'picture{i}' : getattr(profile, f'picture{i}')\
+            for i in range(1,5)
+    }
+
+    imgs = {
+        k: Image.open(io.BytesIO(v)).filter(
+            ImageFilter.GaussianBlur(
+                get_blur_level(user)
+            )
+        ) if v is not None else None for k,v in imgs.items()
+    }
+    for key in imgs:
+        if imgs[key] is None:
+            continue
         b_io = io.BytesIO()
-        imgs[i].save(b_io, format='JPEG')
-        imgs[i].close()
-        imgs[i] = base64.b64encode(b_io.getvalue()).decode(encoding='utf-8')
+        imgs[key].save(b_io, format='JPEG')
+        imgs[key].close()
+        imgs[key] = base64.b64encode(
+            b_io.getvalue()
+        ).decode(encoding='utf-8')
+
     return imgs
