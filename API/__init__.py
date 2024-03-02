@@ -24,6 +24,8 @@ def get_app() -> Flask:
         init_login_manager()
         from profile_imp import ProfileBP
         ProfileBP().register_all()
+        from message import Message
+        Message().register_all()
 
     @app.teardown_appcontext
     def rm_sess(exception=None):

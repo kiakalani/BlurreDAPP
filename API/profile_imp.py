@@ -1,13 +1,15 @@
 import base64
 import io
 
-from PIL import Image
+from PIL import Image, ImageFilter
 from flask import current_app, request, jsonify
 from flask_login import current_user
-from sqlalchemy import Column, String, Integer, VARBINARY
+from sqlalchemy import Column, String, Integer, VARBINARY,\
+    and_, or_
 
 import abstracts
-
+import auth
+import message
 
 class Profile(current_app.config['DB']['base']):
     """
@@ -47,7 +49,7 @@ def resize_picture(txt: str) -> bytes:
         image = Image.open(io.BytesIO(base64.b64decode(txt)))
         image = image.resize((320, 320))
         img_io = io.BytesIO()
-        image.save(img_io, format='PNG')
+        image.save(img_io, format='JPEG')
         return img_io.getvalue()
     except Exception:
         return None
@@ -157,3 +159,66 @@ class ProfileBP(abstracts.BP):
                 'message': 'Successfully updated the profile'
             })
         ), 200
+
+
+def get_blur_level(user: int) -> int:
+    """
+    A simple function to return the blur level of the
+    user's image.
+    :param: user: The user that is shown to the current_user.
+    :return: A value for blur level according to the number
+    of messages.
+    """
+
+    if current_user.is_anonymous:
+        return 20
+    user2 = current_user.id
+    num_messages = len(
+        message.MessageTable.query.filter(
+            or_(
+                and_(
+                    message.MessageTable.sender == user,
+                    message.MessageTable.receiver == user2
+                ),
+                and_(
+                    message.MessageTable.sender == user2,
+                    message.MessageTable.receiver == user
+                )
+            )
+        ).all()
+    )
+    return max(0, 20 - num_messages)
+
+def get_recepient_images(user: int) -> list[str]:
+    """
+    A method to provide the base64 encoded images with the appropriate
+    blur applied to it.
+    :param: user: is the id of the user
+    :return: A list containing the images corresponding to the user
+    that have the blur effect applied to them.
+    """
+
+    if current_user.is_anonymous:
+        return []
+    user: auth.User = auth.User.query.filter(auth.User.id == user).first()
+    if not user:
+        return []
+    profile: Profile = Profile.query.filter(
+        Profile.email == user.email
+    ).first()
+    imgs = [
+        profile.picture1,
+        profile.picture2,
+        profile.picture3,
+        profile.picture4
+    ]
+    imgs = [Image.frombytes(i) for i in imgs if i is not None]
+    imgs: list[Image.Image] = [
+        i.filter(ImageFilter.GaussianBlur(get_blur_level(user))) for i in imgs
+    ]
+    for i in range(len(imgs)):
+        b_io = io.BytesIO()
+        imgs[i].save(b_io, format='JPEG')
+        imgs[i].close()
+        imgs[i] = base64.b64encode(b_io.getvalue()).decode(encoding='utf-8')
+    return imgs
