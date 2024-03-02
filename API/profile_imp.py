@@ -48,7 +48,7 @@ def resize_picture(txt: str) -> str:
         image = image.resize((320, 320))
         img_io = io.BytesIO()
         image.save(img_io, format='PNG')
-        return base64.b64encode(img_io.getvalue())
+        return base64.b64encode(img_io.getvalue()).decode(encoding='utf-8')
     except Exception:
         return None
 
@@ -157,5 +157,3 @@ class ProfileBP(abstracts.BP):
                 'message': 'Successfully updated the profile'
             })
         ), 200
-
-            
