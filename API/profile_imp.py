@@ -4,7 +4,7 @@ import io
 from PIL import Image
 from flask import current_app, request, jsonify
 from flask_login import current_user
-from sqlalchemy import Column, String, Integer
+from sqlalchemy import Column, String, Integer, VARBINARY
 
 import abstracts
 
@@ -17,10 +17,10 @@ class Profile(current_app.config['DB']['base']):
 
     __tablename__ = 'profile'
     email = Column(String, primary_key=True)
-    picture1 = Column(String)
-    picture2 = Column(String)
-    picture3 = Column(String)
-    picture4 = Column(String)
+    picture1 = Column(VARBINARY)
+    picture2 = Column(VARBINARY)
+    picture3 = Column(VARBINARY)
+    picture4 = Column(VARBINARY)
     gender = Column(String)
     orientation = Column(String)
     looking_for = Column(String)
@@ -35,7 +35,7 @@ class Profile(current_app.config['DB']['base']):
     def __init__(self, email) -> None:
         self.email = email
 
-def resize_picture(txt: str) -> str:
+def resize_picture(txt: str) -> bytes:
     """
     A simple method to validate the image text and
     resize it to 640x480 resolution to save storage
@@ -48,7 +48,7 @@ def resize_picture(txt: str) -> str:
         image = image.resize((320, 320))
         img_io = io.BytesIO()
         image.save(img_io, format='PNG')
-        return base64.b64encode(img_io.getvalue()).decode(encoding='utf-8')
+        return img_io.getvalue()
     except Exception:
         return None
 

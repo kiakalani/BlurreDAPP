@@ -36,7 +36,7 @@ def generate_images(image_path: str, num_rows: int, num_cols: int) -> list[str]:
             for j in range(len(images[i])):
                 img_bytes = io.BytesIO()
                 images[i][j].save(img_bytes, format='PNG')
-                image_strs.append(base64.b64encode(img_bytes.getvalue()).decode(encoding='utf-8'))
+                image_strs.append(img_bytes.getvalue())
         return image_strs
     except Exception as e:
         print(f'Error? {e}')
