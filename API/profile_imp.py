@@ -61,13 +61,6 @@ def valid_checks() -> dict:
     :return: a dictionary containing the name of the column
     and the function validating them as a value.
     """
-
-    a_valid = lambda a: a in [
-        'often',
-        'sometimes',
-        'never'
-    ]
-
     return {
         'gender': lambda g : g in [
             'Male', 'Female', 'Other'
