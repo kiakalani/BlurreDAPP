@@ -24,6 +24,10 @@ def get_app() -> Flask:
         init_login_manager()
         from profile_imp import ProfileBP
         ProfileBP().register_all()
+        from message import Message
+        Message().register_all()
+        from matches import MatchBP
+        MatchBP().register_all()
 
     @app.teardown_appcontext
     def rm_sess(exception=None):
@@ -34,6 +38,6 @@ def get_app() -> Flask:
 
 if __name__ == '__main__':
     app = get_app()
+    print(app.url_map)
     CORS(app, supports_credentials=True, origins="*")
-    print(os.environ.get('VIRTUAL_ENV'), 'is the activated environment')
     app.run(debug=app.config['DEBUG'], host="0.0.0.0", port=3001)
