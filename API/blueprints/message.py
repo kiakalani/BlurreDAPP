@@ -7,7 +7,7 @@ from flask import jsonify, current_app
 from flask_login import current_user
 from sqlalchemy import Column, DateTime, String, Integer, or_, and_
 
-import abstracts
+import blueprints.abstracts as abstracts
 
 
 class MessageTable(current_app.config['DB']['base']):

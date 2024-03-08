@@ -2,8 +2,8 @@ from flask import current_app, jsonify, request
 from flask_login import current_user
 from sqlalchemy import Integer, String, Column, and_, or_, text
 
-import abstracts
-import auth
+import blueprints.abstracts as abstracts
+import blueprints.auth as auth
 
 
 class MatchTable(current_app.config['DB']['base']):

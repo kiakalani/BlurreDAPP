@@ -2,9 +2,9 @@ from flask import jsonify, current_app, request
 from flask_login import current_user
 from sqlalchemy import Column, Integer, String, and_, or_, text
 
-import auth
-import matches
-import abstracts
+import blueprints.auth as auth
+import blueprints.matches as matches
+import blueprints.abstracts as abstracts
 
 class SwipeTable(current_app.config['DB']['base']):
     """

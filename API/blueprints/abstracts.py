@@ -113,7 +113,6 @@ class BP:
                     if not final_funcs.get(fname):
                         final_funcs[fname] = {}
                     num_args = len(inspect.getfullargspec(f).args)
-                    print(num_args)                    
             
                     if not final_funcs[fname].get(num_args):
                         final_funcs[fname][num_args] = {'method': [method], 'functions': [f]}
@@ -140,7 +139,6 @@ class BP:
         """
 
         funcs_to_register = self.assemble_functions()
-        print(funcs_to_register)
         for route, contents in funcs_to_register.items():
             route = '/' + route
             if route != '/':
@@ -149,8 +147,6 @@ class BP:
                 t_rt = route
                 for i in range(nparams):
                     t_rt += f'<a{i}>/'
-                print(comps)
-                print(t_rt)
                 self.__bp.add_url_rule(
                     t_rt, t_rt, view_func = comps['function'], methods=comps['method']
                 )

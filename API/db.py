@@ -54,11 +54,8 @@ def load_orms(app: Flask) -> None:
     :param: app: The flask application
     :return: None
     """
-    from auth import User
-    from profile_imp import Profile
-    from message import MessageTable
-    from matches import MatchTable
-    from swipe import SwipeTable
+    import blueprints
+    classes = blueprints.get_all_orms()
     db_inf: DBComps = app.config['DB']
     db_inf['base'].metadata.create_all(bind=db_inf['engine'])
 

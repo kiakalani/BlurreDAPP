@@ -7,9 +7,9 @@ from flask_login import current_user
 from sqlalchemy import Column, String, Integer, VARBINARY,\
     and_, or_
 
-import abstracts
-import auth
-import message
+import blueprints.abstracts as abstracts
+import blueprints.auth as auth
+import blueprints.message as message
 
 class Profile(current_app.config['DB']['base']):
     """
