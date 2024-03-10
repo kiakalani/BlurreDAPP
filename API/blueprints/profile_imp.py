@@ -159,7 +159,7 @@ class ProfileBP(abstracts.BP):
             return jsonify({'message': 'Not authorized'}), 400
         json = request.get_json()
         uid = json.get('user_id')
-        if not uid or not uid.isdigit():
+        if not uid or not(isinstance(uid, str) and uid.isdigit()):
             return jsonify({'message': 'Invalid request'}), 400
         uid = int(uid)
         user = auth.User.query.filter(auth.User.id == uid).first()
