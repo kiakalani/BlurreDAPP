@@ -12,7 +12,7 @@ def __init_modules():
             mod = importlib.import_module(f'blueprints.{mod_name}')
             __modules.append(mod)
 
-def get_all_bps() -> list[abstracts.BP]:
+def get_all_bps(): 
     __init_modules()
     ret_arr = []
     for m in __modules:
@@ -24,7 +24,7 @@ def get_all_bps() -> list[abstracts.BP]:
                 ret_arr.append(attr)
     return ret_arr
 
-def get_all_orms() -> list[DeclarativeMeta]:
+def get_all_orms():
     __init_modules()
     ret_arr = []
     for m in __modules:

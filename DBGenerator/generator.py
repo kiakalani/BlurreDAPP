@@ -9,7 +9,7 @@ from PIL import Image
 import sqlalchemy
 from werkzeug.security import generate_password_hash
 
-def generate_images(image_path: str, num_rows: int, num_cols: int) -> list[str]:
+def generate_images(image_path: str, num_rows: int, num_cols: int):
     """
     A method to generate the base64 encoded images from a single image
     provided that contains certain number of portfolio pictures.

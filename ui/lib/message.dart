@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:ui/auth.dart';
 
 class MessagePage extends StatefulWidget {
   final String otherPersonName;
@@ -92,6 +93,11 @@ class MessagePageState extends State<MessagePage> {
 
   @override
   Widget build(BuildContext context) {
+
+    Authorization().postRequest("/profile/details/", {
+      "user_id": "1"
+    }).then((value) => {print(value)});
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.otherPersonName),

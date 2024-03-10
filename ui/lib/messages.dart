@@ -12,6 +12,7 @@ class MessagesPage extends StatefulWidget {
 class MessagesPageState extends State<MessagesPage> {
   @override
   Widget build(BuildContext context) {
+
     final List<Map<String, dynamic>> messages = [
       {
         'name': 'Alice',

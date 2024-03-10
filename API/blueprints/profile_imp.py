@@ -240,7 +240,7 @@ def get_recepient_images(user: int, profile: Profile = None) -> dict:
     imgs = {
         k: Image.open(io.BytesIO(v)).filter(
             ImageFilter.GaussianBlur(
-                get_blur_level(user)
+                get_blur_level(user.id)
             )
         ) if v is not None else None for k,v in imgs.items()
     }
