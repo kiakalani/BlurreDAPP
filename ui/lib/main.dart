@@ -54,23 +54,23 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home Page'),
+        title: const Text('Home'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           TextButton(
             onPressed: () => Navigator.push(
                 context, MaterialPageRoute(builder: (_) => const MessagesPage())),
-            child: const Text('Messages', style: TextStyle(color: Colors.white)),
+            child: const Text('Messages', style: TextStyle(color: Colors.black)),
           ),
           TextButton(
             onPressed: () => Navigator.push(
                 context, MaterialPageRoute(builder: (_) => const ProfileSettingsPage())),
-            child: const Text('Profile Settings', style: TextStyle(color: Colors.white)),
+            child: const Text('Profile Settings', style: TextStyle(color: Colors.black)),
           ),
           TextButton(
             onPressed: () => Navigator.push(
                 context, MaterialPageRoute(builder: (_) => const LoginPage())),
-            child: const Text('Log In', style: TextStyle(color: Colors.white)),
+            child: const Text('Log In', style: TextStyle(color: Colors.black)),
           ),
         ],
       ),

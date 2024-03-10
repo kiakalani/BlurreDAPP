@@ -73,6 +73,7 @@ class SwipePage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: <Widget>[
                 FloatingActionButton(
+                  heroTag: null,
                   onPressed: () {
                     // Handle dislike action
                   },
@@ -80,6 +81,7 @@ class SwipePage extends StatelessWidget {
                   child: const Icon(Icons.close, color: Colors.white),
                 ),
                 FloatingActionButton(
+                  heroTag: null,
                   onPressed: () {
                     // Handle like action
                   },

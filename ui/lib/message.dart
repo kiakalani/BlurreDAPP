@@ -120,18 +120,24 @@ class MessagePageState extends State<MessagePage> {
                         color: message.isCurrentUser ? Colors.blue[100] : Colors.green[100],
                         borderRadius: BorderRadius.circular(12.0),
                       ),
-                      child: Column(
-                        crossAxisAlignment: message.isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          Text(
-                            message.text,
-                            style: const TextStyle(color: Colors.black),
+                          Flexible(
+                            child: Text(
+                              message.text,
+                              style: const TextStyle(color: Colors.black),
+                            ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _formatTimestamp(message.timestamp),
-                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                          ),
+                          const SizedBox(width: 4),
+                          Align(
+                            alignment: Alignment.bottomRight,
+                            child: Text(
+                               _formatTimestamp(message.timestamp),
+                              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                            ),
+                          )
                         ],
                       ),
                     )

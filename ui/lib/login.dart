@@ -26,6 +26,9 @@ class LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  // Password visibility
+  bool _passwordVisible = false;
+
   @override
   Widget build(BuildContext context) {
     Authorization().isLoggedIn().then((logged_in) => {
@@ -68,13 +71,23 @@ class LoginPageState extends State<LoginPage> {
               const SizedBox(height: 20),
               SizedBox(
                 width: fieldWidth, // Control the width here
-                child: TextField(
+                child: TextFormField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(
+                  obscureText: !_passwordVisible,
+                  decoration: InputDecoration(
                     labelText: 'Password',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _passwordVisible = !_passwordVisible;
+                        });
+                      },
+                    ),    
                   ),
-                  obscureText: true,
                 ),
               ),
               const SizedBox(height: 20),
