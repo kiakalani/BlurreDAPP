@@ -11,6 +11,7 @@ import 'package:cookie_jar/cookie_jar.dart';
 //import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:ui/auth.dart';
 import 'package:ui/main.dart';
+import 'package:ui/sock.dart';
 
 import 'signup.dart';
 import 'profile_setting.dart';
@@ -79,14 +80,16 @@ class LoginPageState extends State<LoginPage> {
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                        _passwordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                       ),
                       onPressed: () {
                         setState(() {
                           _passwordVisible = !_passwordVisible;
                         });
                       },
-                    ),    
+                    ),
                   ),
                 ),
               ),
@@ -99,6 +102,7 @@ class LoginPageState extends State<LoginPage> {
                   }).then((resp) => {
                         if (resp.statusCode == 200)
                           {
+                            SocketIO('http://localhost:3001'),
                             Navigator.of(context).push(MaterialPageRoute(
                                 builder: (context) => const HomePage()))
                           }

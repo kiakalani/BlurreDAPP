@@ -14,6 +14,7 @@ import 'package:ui/auth.dart';
 import 'package:ui/messages.dart';
 import 'package:ui/profile_setting.dart';
 import 'package:flutter/material.dart';
+import 'package:ui/sock.dart';
 import 'swipe.dart';
 import 'login.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -94,14 +95,16 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           TextButton(
-            onPressed: () => Navigator.push(
-                context, MaterialPageRoute(builder: (_) => const MessagesPage())),
-            child: const Text('Messages', style: TextStyle(color: Colors.black)),
+            onPressed: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const MessagesPage())),
+            child:
+                const Text('Messages', style: TextStyle(color: Colors.black)),
           ),
           TextButton(
-            onPressed: () => Navigator.push(
-                context, MaterialPageRoute(builder: (_) => const ProfileSettingsPage())),
-            child: const Text('Profile Settings', style: TextStyle(color: Colors.black)),
+            onPressed: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const ProfileSettingsPage())),
+            child: const Text('Profile Settings',
+                style: TextStyle(color: Colors.black)),
           ),
           TextButton(
             onPressed: () => Navigator.push(
