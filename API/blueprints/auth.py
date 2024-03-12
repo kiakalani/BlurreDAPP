@@ -96,7 +96,6 @@ class Authorization(abstracts.BP):
         json_req = request.get_json()
         email = json_req.get('email')
         passwd = json_req.get('password')
-        print(json_req)
         # Valdiating the provided variables
         if not email or not passwd:
             return Authorization.create_response(

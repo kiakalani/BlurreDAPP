@@ -45,10 +45,11 @@ class FlaskApp:
         :return: None
         """
 
-        socket = SocketIO(self.__app)
+        socket = SocketIO(self.__app, cors_allowed_origins='*', engineio_logger=True, logger=True)
         self.__app.config['SOCKETIO'] = {'IO':socket, 'SIDS': {}}
         @socket.on('connect')
         def connect(auth):
+            print(auth, 'tried to connect')
             if current_user.is_anonymous:
                 return
             self.__app.config['SOCKETIO']['SIDS'][current_user.id] = request.sid

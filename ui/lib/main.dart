@@ -14,6 +14,7 @@ import 'package:ui/auth.dart';
 import 'package:ui/messages.dart';
 import 'package:ui/profile_setting.dart';
 import 'package:flutter/material.dart';
+import 'package:ui/sock.dart';
 import 'swipe.dart';
 import 'login.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -58,14 +59,16 @@ class HomePage extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           TextButton(
-            onPressed: () => Navigator.push(
-                context, MaterialPageRoute(builder: (_) => const MessagesPage())),
-            child: const Text('Messages', style: TextStyle(color: Colors.black)),
+            onPressed: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const MessagesPage())),
+            child:
+                const Text('Messages', style: TextStyle(color: Colors.black)),
           ),
           TextButton(
-            onPressed: () => Navigator.push(
-                context, MaterialPageRoute(builder: (_) => const ProfileSettingsPage())),
-            child: const Text('Profile Settings', style: TextStyle(color: Colors.black)),
+            onPressed: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const ProfileSettingsPage())),
+            child: const Text('Profile Settings',
+                style: TextStyle(color: Colors.black)),
           ),
           TextButton(
             onPressed: () => Navigator.push(
@@ -75,12 +78,13 @@ class HomePage extends StatelessWidget {
         ],
       ),
       body: FutureBuilder<String>(
-        future: readBase64Image('assets/images/lovely.txt'), 
+        future: readBase64Image('assets/images/lovely.txt'),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             if (snapshot.hasError) {
               print("Error loading image: ${snapshot.error}");
-              return const Center(child: Text('Error loading image'));            }
+              return const Center(child: Text('Error loading image'));
+            }
             if (snapshot.hasData) {
               return Center(
                 child: SwipePage(
