@@ -293,6 +293,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                           }
                         });
                       }
+                      print('picture1: ' + base64.encode(_imageBytes!));
                     },
                     child: const Text('Save'),
                   ),

@@ -8,8 +8,8 @@ from werkzeug.security import generate_password_hash,\
     check_password_hash
 
 from sqlalchemy import Column, Integer, String
-import abstracts
-import profile_imp
+import blueprints.abstracts as abstracts
+import blueprints.profile_imp as profile_imp
 
 class User(UserMixin, current_app.config['DB']['base']):
     """
@@ -96,7 +96,6 @@ class Authorization(abstracts.BP):
         json_req = request.get_json()
         email = json_req.get('email')
         passwd = json_req.get('password')
-        print(json_req)
         # Valdiating the provided variables
         if not email or not passwd:
             return Authorization.create_response(

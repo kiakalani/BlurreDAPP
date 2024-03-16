@@ -1,13 +1,15 @@
 import base64
 import io
 
-from PIL import Image
+from PIL import Image, ImageFilter
 from flask import current_app, request, jsonify
 from flask_login import current_user
-from sqlalchemy import Column, String, Integer
+from sqlalchemy import Column, String, Integer, VARBINARY,\
+    and_, or_
 
-import abstracts
-
+import blueprints.abstracts as abstracts
+import blueprints.auth as auth
+import blueprints.message as message
 
 class Profile(current_app.config['DB']['base']):
     """
@@ -17,10 +19,10 @@ class Profile(current_app.config['DB']['base']):
 
     __tablename__ = 'profile'
     email = Column(String, primary_key=True)
-    picture1 = Column(String)
-    picture2 = Column(String)
-    picture3 = Column(String)
-    picture4 = Column(String)
+    picture1 = Column(VARBINARY)
+    picture2 = Column(VARBINARY)
+    picture3 = Column(VARBINARY)
+    picture4 = Column(VARBINARY)
     gender = Column(String)
     orientation = Column(String)
     looking_for = Column(String)
@@ -35,7 +37,7 @@ class Profile(current_app.config['DB']['base']):
     def __init__(self, email) -> None:
         self.email = email
 
-def resize_picture(txt: str) -> str:
+def resize_picture(txt: str) -> bytes:
     """
     A simple method to validate the image text and
     resize it to 640x480 resolution to save storage
@@ -47,8 +49,8 @@ def resize_picture(txt: str) -> str:
         image = Image.open(io.BytesIO(base64.b64decode(txt)))
         image = image.resize((320, 320))
         img_io = io.BytesIO()
-        image.save(img_io, format='PNG')
-        return base64.b64encode(img_io.getvalue())
+        image.save(img_io, format='JPEG')
+        return img_io.getvalue()
     except Exception:
         return None
 
@@ -59,13 +61,6 @@ def valid_checks() -> dict:
     :return: a dictionary containing the name of the column
     and the function validating them as a value.
     """
-
-    a_valid = lambda a: a in [
-        'often',
-        'sometimes',
-        'never'
-    ]
-
     return {
         'gender': lambda g : g in [
             'Male', 'Female', 'Other'
@@ -157,5 +152,108 @@ class ProfileBP(abstracts.BP):
                 'message': 'Successfully updated the profile'
             })
         ), 200
+    @staticmethod
+    def bp_post_details():
+        # Error checking to make sure the request is valid
+        if current_user.is_anonymous:
+            return jsonify({'message': 'Not authorized'}), 400
+        json = request.get_json()
+        uid = json.get('user_id')
+        if not uid or not(isinstance(uid, str) and uid.isdigit()):
+            return jsonify({'message': 'Invalid request'}), 400
+        uid = int(uid)
+        user: auth.User = auth.User.query.filter(auth.User.id == uid).first()
+        if not user:
+            return jsonify({'message': 'Invalid User'}), 400
 
-            
+        # Getting the profile instance
+        ret_prof: Profile = Profile.query.filter(Profile.email == user.email).first()
+
+        # Getting the details in a dictionary format and replacing
+        # images with base64 encoded versions of them
+        images = get_recepient_images(uid, ret_prof)
+        ret_dict = {
+            c.name: getattr(ret_prof, c.name) \
+                for c in Profile.__table__.columns
+        }
+        for i in range(1, 5):
+            ret_dict[f'picture{i}'] = None
+        for k in images:
+            ret_dict[k] = images[k]
+        ret_dict['name'] = user.name
+        ret_dict['age'] = auth.get_age(auth.bday_str_to_datetime(user.birthday))
+        return ProfileBP.create_response(jsonify({
+            'message': 'Success',
+            'profile': ret_dict
+        })), 200
+
+
+def get_blur_level(user: int) -> int:
+    """
+    A simple function to return the blur level of the
+    user's image.
+    :param: user: The user that is shown to the current_user.
+    :return: A value for blur level according to the number
+    of messages.
+    """
+
+    if current_user.is_anonymous:
+        return 20
+    user2 = current_user.id
+    num_messages = len(
+        message.MessageTable.query.filter(
+            or_(
+                and_(
+                    message.MessageTable.sender == user,
+                    message.MessageTable.receiver == user2
+                ),
+                and_(
+                    message.MessageTable.sender == user2,
+                    message.MessageTable.receiver == user
+                )
+            )
+        ).all()
+    )
+    return max(0, 20 - num_messages)
+
+def get_recepient_images(user: int, profile: Profile = None) -> dict:
+    """
+    A method to provide the base64 encoded images with the appropriate
+    blur applied to it.
+    :param: user: is the id of the user
+    :return: A list containing the images corresponding to the user
+    that have the blur effect applied to them.
+    """
+    imgs = {f'picture{i}': None for i in range(1, 5)}
+    if current_user.is_anonymous:
+        return imgs
+    user: auth.User = auth.User.query.filter(auth.User.id == user).first()
+    if not user:
+        return imgs
+    if profile is None:
+        profile: Profile = Profile.query.filter(
+            Profile.email == user.email
+        ).first()
+    imgs: dict[str, Image.Image] = {
+        f'picture{i}' : getattr(profile, f'picture{i}')\
+            for i in range(1,5)
+    }
+
+    imgs = {
+        k: Image.open(io.BytesIO(v)).filter(
+            ImageFilter.GaussianBlur(
+                get_blur_level(user.id)
+            )
+        ) if v is not None else None for k,v in imgs.items()
+    }
+    for key in imgs:
+        if imgs[key] is None:
+            continue
+        b_io = io.BytesIO()
+        imgs[key].save(b_io, format='JPEG')
+        imgs[key].close()
+        imgs[key] = base64.b64encode(
+            b_io.getvalue()
+        ).decode(encoding='utf-8')
+
+    return imgs
