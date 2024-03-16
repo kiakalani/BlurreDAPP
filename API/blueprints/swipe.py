@@ -59,7 +59,7 @@ class SwipeBP(abstracts.BP):
         })), 200
     
     @staticmethod
-    def bp_post_swipe():
+    def bp_post():
         """
         A method to perform the swipe action on a user.
         This method would store a match in case both users
