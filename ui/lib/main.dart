@@ -18,6 +18,7 @@ import 'package:ui/sock.dart';
 import 'swipe.dart';
 import 'login.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/foundation.dart';
 
 Future<String> readBase64Image(String assetPath) async {
   return await rootBundle.loadString(assetPath);
@@ -26,8 +27,8 @@ Future<String> readBase64Image(String assetPath) async {
 void main() {
   Authorization("http://localhost:3001");
   Authorization().isLoggedIn().then((value) => {
-        developer.log("Logged In is " + value.toString()),
-      });
+    developer.log("Logged In is " + value.toString()),
+  });
   runApp(const MyApp());
 }
 
@@ -48,9 +49,44 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
 
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  Uint8List? _currentUserProfilePicture;
+  String? _currentUserBio;
+  String _currentUserName = "Banana";
+  String _currentUserBirthday = "04-12-2000";
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize profile details 
+    _fetchProfileDetails();
+  }
+
+  void _fetchProfileDetails() {
+    Authorization().postRequest("/profile/details/", {
+      "user_id": "1"
+    }).then((value) {
+      final responseBody = json.decode(value.toString()); 
+      if (responseBody['profile'] != null && 
+          responseBody['profile']['picture1'] != null &&
+          responseBody['profile']['bio'] != null) {
+        final String base64Image = responseBody['profile']['picture1'];
+        final String bio = responseBody['profile']['bio'];
+        setState(() {
+          _currentUserProfilePicture = base64Decode(base64Image);
+          _currentUserBio = bio;
+        });
+      }
+    });
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,29 +113,16 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
-      body: FutureBuilder<String>(
-        future: readBase64Image('assets/images/lovely.txt'),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            if (snapshot.hasError) {
-              print("Error loading image: ${snapshot.error}");
-              return const Center(child: Text('Error loading image'));
-            }
-            if (snapshot.hasData) {
-              return Center(
-                child: SwipePage(
-                  picture1: snapshot.data!,
-                  name: 'Banana',
-                  birthday: '04-17-2000',
-                  bio: 'Loves hiking, swimming, and reading.',
-                ),
-              );
-            }
-          }
-          // While loading
-          return const Center(child: CircularProgressIndicator());
-        },
-      ),
+      body: _currentUserProfilePicture == null
+          ? const Center(child: CircularProgressIndicator())
+          : Center(
+              child: SwipePage(
+                picture1: base64Encode(_currentUserProfilePicture!), 
+                name: _currentUserName,
+                birthday:_currentUserBirthday,
+                bio: _currentUserBio ?? 'No bio available.',
+              ),
+            ),
     );
   }
 }

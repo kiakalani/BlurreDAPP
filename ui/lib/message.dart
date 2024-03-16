@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:ui/auth.dart';
+import 'package:flutter/foundation.dart';
+import 'dart:convert';
 
 class MessagePage extends StatefulWidget {
   final String otherPersonName;
@@ -34,6 +36,7 @@ class MessagePageState extends State<MessagePage> {
   final TextEditingController _messageController = TextEditingController();
   late IO.Socket socket;
   List<Message> _messages = [];
+  Uint8List? _currentUserProfilePicture;
 
   @override
   void initState() {
@@ -56,7 +59,23 @@ class MessagePageState extends State<MessagePage> {
         timestamp: DateTime.now().subtract(const Duration(minutes: 1)),
       ),
     ];
+
     _initSocket();
+    _fetchAndSetProfilePicture();
+  }
+
+  void _fetchAndSetProfilePicture() {
+    Authorization().postRequest("/profile/details/", {
+      "user_id": "1"
+    }).then((value) {
+      final responseBody = json.decode(value.toString()); 
+      if (responseBody['profile'] != null && responseBody['profile']['picture1'] != null) {
+        final String base64Image = responseBody['profile']['picture1'];
+        setState(() {
+          _currentUserProfilePicture = base64Decode(base64Image);
+        });
+      }
+    });
   }
 
   void _initSocket() {
@@ -93,11 +112,6 @@ class MessagePageState extends State<MessagePage> {
 
   @override
   Widget build(BuildContext context) {
-
-    Authorization().postRequest("/profile/details/", {
-      "user_id": "1"
-    }).then((value) => {print(value)});
-
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.otherPersonName),
@@ -116,7 +130,7 @@ class MessagePageState extends State<MessagePage> {
                   ),
                   // display profile picture of the current user
                   trailing: message.isCurrentUser ? CircleAvatar(
-                    backgroundImage: NetworkImage(widget.currentUserProfilePicture),
+                    backgroundImage: _currentUserProfilePicture != null ? MemoryImage(_currentUserProfilePicture!) : null,
                   ) : null,
                   title: Align(
                     alignment: message.isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
