@@ -57,10 +57,10 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  Uint8List? _currentUserProfilePicture;
-  String? _currentUserBio;
-  String _currentUserName = "Banana";
-  String _currentUserBirthday = "04-12-2000";
+  Uint8List? _profilePicture;
+  String? _bio;
+  String? _name;
+  int? _age;
 
   @override
   void initState() {
@@ -73,15 +73,23 @@ class _HomePageState extends State<HomePage> {
     Authorization().postRequest("/profile/details/", {
       "user_id": "1"
     }).then((value) {
+      print(value);
       final responseBody = json.decode(value.toString()); 
       if (responseBody['profile'] != null && 
+          responseBody['profile']['name'] != null &&
+          responseBody['profile']['age'] != null &&
           responseBody['profile']['picture1'] != null &&
-          responseBody['profile']['bio'] != null) {
+          responseBody['profile']['bio'] != null 
+          ) {
         final String base64Image = responseBody['profile']['picture1'];
         final String bio = responseBody['profile']['bio'];
+        final String name = responseBody['profile']['name'];
+        final int age = responseBody['profile']['age'];
         setState(() {
-          _currentUserProfilePicture = base64Decode(base64Image);
-          _currentUserBio = bio;
+          _profilePicture = base64Decode(base64Image);
+          _bio = bio;
+          _name = name;
+          _age = age;
         });
       }
     });
@@ -113,14 +121,14 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: _currentUserProfilePicture == null
+      body: _profilePicture == null
           ? const Center(child: CircularProgressIndicator())
           : Center(
               child: SwipePage(
-                picture1: base64Encode(_currentUserProfilePicture!), 
-                name: _currentUserName,
-                birthday:_currentUserBirthday,
-                bio: _currentUserBio ?? 'No bio available.',
+                picture1: base64Encode(_profilePicture!), 
+                name: _name!,
+                age:_age!,
+                bio: _bio!,
               ),
             ),
     );
