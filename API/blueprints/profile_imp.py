@@ -162,7 +162,7 @@ class ProfileBP(abstracts.BP):
         if not uid or not(isinstance(uid, str) and uid.isdigit()):
             return jsonify({'message': 'Invalid request'}), 400
         uid = int(uid)
-        user = auth.User.query.filter(auth.User.id == uid).first()
+        user: auth.User = auth.User.query.filter(auth.User.id == uid).first()
         if not user:
             return jsonify({'message': 'Invalid User'}), 400
 
@@ -180,6 +180,8 @@ class ProfileBP(abstracts.BP):
             ret_dict[f'picture{i}'] = None
         for k in images:
             ret_dict[k] = images[k]
+        ret_dict['name'] = user.name
+        ret_dict['age'] = auth.get_age(auth.bday_str_to_datetime(user.birthday))
         return ProfileBP.create_response(jsonify({
             'message': 'Success',
             'profile': ret_dict
