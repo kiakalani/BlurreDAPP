@@ -46,8 +46,8 @@ def resize_picture(txt: str) -> bytes:
     if txt is None:
         return None
     try:
-        image = Image.open(io.BytesIO(base64.b64decode(txt)))
-        image = image.resize((320, 320))
+        image = Image.open(io.BytesIO(base64.b64decode(txt))).convert('RGB')
+        image = image.resize((150, 150))
         img_io = io.BytesIO()
         image.save(img_io, format='JPEG')
         return img_io.getvalue()
@@ -133,11 +133,13 @@ class ProfileBP(abstracts.BP):
             value = jsons.get(item)
             # Would provide the result of verification
             check_result = check_function(value)
-            if check_result:
+            if (check_result is not False):
                 if item == 'height':
                     # height has to be converted to a string
                     profile.height = int(value)
                 elif item[:-1] == 'picture':
+                    if check_result is None:
+                        continue
                     # picture has the value in the check result
                     setattr(profile, item, check_result)
                 else:

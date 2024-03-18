@@ -1,83 +1,157 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:ui/auth.dart';
 import 'package:ui/profile_details.dart';
 
-class SwipePage extends StatelessWidget {
-  final String picture1;
-  final String name;
-  final int age;
-  final String bio;
+class SwipePage extends StatefulWidget {
+  const SwipePage({Key? key}) : super(key: key);
 
-  const SwipePage({
-    required this.picture1,
-    required this.name,
-    required this.age,
-    required this.bio,
-  });
+  @override
+  SwipePageState createState() => SwipePageState();
+}
 
-  // Convert the base64 string to a Uint8List
-  Uint8List _imageFromBase64String(String base64String) {
-    return base64Decode(base64String);
+class SwipePageState extends State<SwipePage> {
+  Uint8List? _profilePicture;
+  String? _bio;
+  String? _name;
+  int? _age;
+  List<int>? userIds;
+  int? currentUserId;
+
+  @override
+  void initState() {
+    super.initState();
+    // fetch user id
+    _fetchUserIds();
+  }
+
+  void _fetchUserIds() {
+    Authorization().getRequest("/swipe/").then((value) {
+      final responseBody = json.decode(value.toString()); 
+      if (responseBody['ids'] != null) {
+        setState(() {
+          userIds = List<int>.from(responseBody['ids']);
+          print(userIds);
+          if (userIds!.isEmpty) {
+            // Show that there are no more matching users
+          } else 
+          // get current user id
+          _getCurrentUserId();
+        });
+      }
+    });
+  }
+
+  void _getCurrentUserId() {
+    if (userIds != null && userIds!.isNotEmpty) {
+      currentUserId = userIds!.removeAt(0);
+      // Initialize profile details 
+      _fetchProfileDetails();
+    } else _fetchUserIds();
+  }
+
+  void swipe(String action) async {
+    Authorization().postRequest('/swipe/', {
+      "swiped": currentUserId.toString(),
+      "action": action
+    }).then((value) => {
+      if (value.statusCode == 200) {
+        // This means swipe is done correctly
+        _getCurrentUserId(),
+      }
+    });
+  }
+
+  void _fetchProfileDetails() {
+    Authorization().postRequest("/profile/details/", {
+      "user_id": currentUserId.toString()
+    }).then((value) {
+      print(value);
+      final responseBody = json.decode(value.toString()); 
+      if (responseBody['profile'] != null && 
+          responseBody['profile']['name'] != null &&
+          responseBody['profile']['age'] != null &&
+          responseBody['profile']['picture1'] != null &&
+          responseBody['profile']['bio'] != null 
+          ) {
+        final String base64Image = responseBody['profile']['picture1'];
+        final String bio = responseBody['profile']['bio'];
+        final String name = responseBody['profile']['name'];
+        final int age = responseBody['profile']['age'];
+        setState(() {
+          _profilePicture = base64Decode(base64Image);
+          _bio = bio;
+          _name = name;
+          _age = age;
+        });
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final imageBytes = _imageFromBase64String(picture1);
-    return Card(
-      elevation: 4,
-      child: Column(
-        children: <Widget>[
-          Expanded(
-            child: GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => const ProfileDetailsPage()));
-              },
-              child: Image.memory(imageBytes, fit: BoxFit.cover),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              '$name, $age',
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: Text(
-              bio,
-              style: const TextStyle(fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
-                FloatingActionButton(
-                  heroTag: null,
-                  onPressed: () {
-                    // Handle dislike action
+    return Scaffold(
+      body: _profilePicture == null 
+      ? const Center(child: CircularProgressIndicator())
+      : Card(
+          elevation: 4,
+          child: Column(
+            children: <Widget>[
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => ProfileDetailsPage(currentUserId: currentUserId.toString())));
                   },
-                  backgroundColor: Colors.red,
-                  child: const Icon(Icons.close, color: Colors.white),
+                  child: Image.memory(_profilePicture!, fit: BoxFit.cover),
                 ),
-                FloatingActionButton(
-                  heroTag: null,
-                  onPressed: () {
-                    // Handle like action
-                  },
-                  backgroundColor: Colors.green,
-                  child: const Icon(Icons.favorite, color: Colors.white),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  '${_name ?? 'N/A'}, ${_age?.toString() ?? 'N/A'}',
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
-              ],
-            ),
-          )
-        ],
-      ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Text(
+                  _bio ?? 'N/A',
+                  style: const TextStyle(fontSize: 16),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: <Widget>[
+                    FloatingActionButton(
+                      heroTag: null,
+                      onPressed: () {
+                        // Handle dislike action
+                        swipe('left');
+                      },
+                      backgroundColor: Colors.red,
+                      child: const Icon(Icons.close, color: Colors.white),
+                    ),
+                    FloatingActionButton(
+                      heroTag: null,
+                      onPressed: () {
+                        swipe('right');
+                      },
+                      backgroundColor: Colors.green,
+                      child: const Icon(Icons.favorite, color: Colors.white),
+                    ),
+                  ],
+                ),
+              )
+            ],
+          ),
+        ),
     );
   }
 }
+    
+    

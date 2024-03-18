@@ -1,12 +1,7 @@
-import 'dart:convert';
-
-//import 'package:dio/browser.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
-// http_client_adapter.dart
-//import 'package:dio/adapter.dart';
 import 'http_client_adapter.dart'; // Make sure to import the conditional adapter file
 
 class Authorization {
@@ -46,6 +41,7 @@ class Authorization {
 
   // Get requests
   Future<Response> getRequest(String url) async {
+    url = _url + url;
     return _dio.get(url);
   }
 

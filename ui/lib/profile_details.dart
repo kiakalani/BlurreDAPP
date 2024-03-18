@@ -4,7 +4,11 @@ import 'package:ui/auth.dart';
 import 'dart:convert';
 
 class ProfileDetailsPage extends StatefulWidget {
-  const ProfileDetailsPage({Key? key}) : super(key: key);
+  final String currentUserId;
+
+  const ProfileDetailsPage({
+    required this.currentUserId,
+  });
 
   @override
   State<ProfileDetailsPage> createState() => _ProfileDetailsPageState();
@@ -34,7 +38,7 @@ class ProfileDetailsPage extends StatefulWidget {
 
   void _fetchProfileDetails() {
     Authorization().postRequest("/profile/details/", {
-      "user_id": "1"
+      "user_id": widget.currentUserId
     }).then((value) {
       final responseBody = json.decode(value.toString()); 
       if (responseBody['profile'] != null && 

@@ -1,20 +1,8 @@
-import 'dart:io';
-//import 'dart:html' as html;
-//import 'package:dio/browser.dart';
-//import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as developer;
-//import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:dio/dio.dart';
-import 'package:dio_cookie_manager/dio_cookie_manager.dart';
-import 'package:cookie_jar/cookie_jar.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:ui/auth.dart';
 import 'package:ui/messages.dart';
 import 'package:ui/profile_setting.dart';
-import 'package:flutter/material.dart';
-import 'package:ui/sock.dart';
 import 'swipe.dart';
 import 'login.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -57,42 +45,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  Uint8List? _profilePicture;
-  String? _bio;
-  String? _name;
-  int? _age;
-
-  @override
-  void initState() {
-    super.initState();
-    // Initialize profile details 
-    _fetchProfileDetails();
-  }
-
-  void _fetchProfileDetails() {
-    Authorization().postRequest("/profile/details/", {
-      "user_id": "1"
-    }).then((value) {
-      final responseBody = json.decode(value.toString()); 
-      if (responseBody['profile'] != null && 
-          responseBody['profile']['name'] != null &&
-          responseBody['profile']['age'] != null &&
-          responseBody['profile']['picture1'] != null &&
-          responseBody['profile']['bio'] != null 
-          ) {
-        final String base64Image = responseBody['profile']['picture1'];
-        final String bio = responseBody['profile']['bio'];
-        final String name = responseBody['profile']['name'];
-        final int age = responseBody['profile']['age'];
-        setState(() {
-          _profilePicture = base64Decode(base64Image);
-          _bio = bio;
-          _name = name;
-          _age = age;
-        });
-      }
-    });
-  }
   
   @override
   Widget build(BuildContext context) {
@@ -120,16 +72,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: _profilePicture == null
-          ? const Center(child: CircularProgressIndicator())
-          : Center(
-              child: SwipePage(
-                picture1: base64Encode(_profilePicture!), 
-                name: _name!,
-                age:_age!,
-                bio: _bio!,
-              ),
-            ),
+      body: const Center(child: SwipePage()),
     );
   }
 }

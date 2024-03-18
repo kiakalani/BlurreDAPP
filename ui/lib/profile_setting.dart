@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:intl/find_locale.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ui/main.dart';
 import 'dart:convert';

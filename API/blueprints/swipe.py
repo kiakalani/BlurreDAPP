@@ -109,7 +109,7 @@ class SwipeBP(abstracts.BP):
                 )
             ).first() is not None:
                 # Means we have a match
-                a_match = matches.MatchTable(swiped, current_user)
+                a_match = matches.MatchTable(swiped, current_user.id)
                 # Todo: Notify within the socket
                 SwipeBP.db()['session'].add(a_match)
         SwipeBP.db()['session'].commit()
