@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:ui/profile_details.dart';
 
 class SwipePage extends StatelessWidget {
   final String picture1;
@@ -28,7 +29,13 @@ class SwipePage extends StatelessWidget {
       child: Column(
         children: <Widget>[
           Expanded(
-            child: Image.memory(imageBytes, fit: BoxFit.cover),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const ProfileDetailsPage()));
+              },
+              child: Image.memory(imageBytes, fit: BoxFit.cover),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),

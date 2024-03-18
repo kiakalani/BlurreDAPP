@@ -73,7 +73,6 @@ class _HomePageState extends State<HomePage> {
     Authorization().postRequest("/profile/details/", {
       "user_id": "1"
     }).then((value) {
-      print(value);
       final responseBody = json.decode(value.toString()); 
       if (responseBody['profile'] != null && 
           responseBody['profile']['name'] != null &&
