@@ -155,11 +155,12 @@ class Message(abstracts.BP):
 
             # Todo: receive the message through socket for the recepient
             # over here
-            Message.sock().emit('receive_msg', {
-                'sender': current_user.id,
-                'message': msg,
-                'updated_pics': get_updated_pic(current_user, user)
-            }, room=Message.sock_sids()[a0])
+            if Message.sock_sids().get(uid):
+                Message.sock().emit('receive_msg', {
+                    'sender': current_user.id,
+                    'message': msg,
+                    'updated_pics': get_updated_pic(current_user, user)
+                }, room=Message.sock_sids()[uid])
 
             return Message.create_response(jsonify({
                 'message': 'success',
