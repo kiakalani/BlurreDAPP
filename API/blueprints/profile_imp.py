@@ -221,7 +221,7 @@ def get_blur_level(user: int, user2: int=None) -> int:
     )
     return max(0, 20 - num_messages)
 
-def get_image(user: auth.User, user2: auth.User, pic_name: str = 'picture1', profile=None) -> str:
+def get_image(user, user2, pic_name: str = 'picture1', profile=None) -> str:
     """
     Getter for the image given by the pic name.
     :param: user: the user we are trying to get the image for.

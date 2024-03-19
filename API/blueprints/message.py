@@ -60,7 +60,7 @@ def get_message_recepients():
             )['picture1']
     return matches
 
-def get_updated_pic(user: auth.User, user2: auth.User) -> str:
+def get_updated_pic(user, user2) -> str:
     """
     Provides the first picture of the given user after
     each message.
@@ -80,6 +80,42 @@ class Message(abstracts.BP):
 
     def __init__(self) -> None:
         super().__init__('message')
+    @staticmethod
+    def bp_get() -> list:
+        def get_related_msgs(a0):
+            if current_user.is_anonymous:
+                return Message.create_response(jsonify({
+                    'message': 'Unauthorized'
+                })), 400
+            if not a0.isdigit():
+                return Message.create_response(jsonify({
+                    'message': 'Bad request'
+                })), 400
+            uid = int(a0)
+            user = auth.User.query.filter(auth.User.id == uid).first()
+            if not user:
+                return Message.create_response(jsonify({
+                    'message': 'Bad request'
+                })), 400
+            messages = MessageTable.query.filter(
+                or_(
+                    and_(
+                        MessageTable.sender == uid,
+                        MessageTable.receiver == current_user.id
+                    ),
+                    and_(
+                        MessageTable.sender == current_user.id,
+                        MessageTable.receiver == uid
+                    )
+                )
+            ).all()
+            return jsonify(
+                {
+                    'message': 'success',
+                    'messages': messages
+                }
+            )
+        return [get_related_msgs]
 
     @staticmethod
     def bp_post() -> list:
