@@ -18,6 +18,30 @@ class MatchTable(current_app.config['DB']['base']):
         self.user1 = user1
         self.user2 = user2
 
+def get_matches() -> list:
+    """
+    Getter for matches of the users.
+    :return: a list containing the id of the 
+    users that are matched with the current user.
+    """
+    if current_user.is_anonymous:
+        return {}
+    
+    # Getting the users that have matched with the current user
+    users = MatchTable.query.filter(
+        or_(
+            MatchTable.user1 == current_user.id,
+            MatchTable.user2 == current_user.id
+        )
+    ).all()
+
+    # We want to return only the id of these users as a response
+    users = [
+        (u.user1 if u.user2 == current_user.id else u.user2) for u in users
+    ]
+
+    return users
+
 class MatchBP(abstracts.BP):
     def __init__(self) -> None:
         super().__init__('match')
@@ -34,18 +58,7 @@ class MatchBP(abstracts.BP):
             })), 400
         
         # Getting the users that have matched with the current user
-        users = MatchTable.query.filter(
-            or_(
-                MatchTable.user1 == current_user.id,
-                MatchTable.user2 == current_user.id
-            )
-        ).all()
-
-        # We want to return only the id of these users as a response
-        users = [
-            (u.user1 if u.user2 == current_user.id else u.user2) for u in users
-        ]
-
+        users = get_matches()
         return MatchBP.create_response(jsonify({
             'message': 'Success',
             'response': users
