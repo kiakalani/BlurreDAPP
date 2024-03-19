@@ -43,7 +43,7 @@ def get_message_recepients():
     matches = match.get_matches()
     matches = {i: {} for i in matches}
     for i in matches:
-        user = auth.User.query.filter(user.id == i).first()
+        user = auth.User.query.filter(auth.User.id == i).first()
         if not user:
             del matches[i]
         else:
@@ -83,6 +83,10 @@ class Message(abstracts.BP):
                 'info': get_message_recepients()
             })
         def send_message(a0):
+            """
+            Sends the message and through socket informs the other user
+            that the message has been received
+            """
             return jsonify({'Todo': '''
             Implement messaging to a recepient functionality.
             Integrate Socket with this.
