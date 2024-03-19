@@ -10,6 +10,8 @@ from sqlalchemy import Column, DateTime, String, Integer, or_, and_, Boolean
 import blueprints.abstracts as abstracts
 import blueprints.matches as match
 import blueprints.auth as auth
+import blueprints.profile_imp as prof
+
 
 class MessageTable(current_app.config['DB']['base']):
     """
@@ -34,7 +36,7 @@ def get_message_recepients():
     """
     This method returns the matched users name and id in the
     following format:
-    {id(int): {name: str, new_messages: int}}
+    {id(int): {name: str, new_messages: int, picture: str}}
     """
     if current_user.is_anonymous:
         return {}
@@ -52,6 +54,10 @@ def get_message_recepients():
                     MessageTable.receiver == current_user.id
                 )
             ).all())
+            matches[i]['picture'] = prof.get_recepient_images(
+                user.id,
+                prof.Profile.query.filter(prof.Profile.email == user.email).first()
+            )['picture1']
     return matches
 
 class Message(abstracts.BP):
