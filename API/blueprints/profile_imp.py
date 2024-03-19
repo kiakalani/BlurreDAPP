@@ -190,18 +190,21 @@ class ProfileBP(abstracts.BP):
         })), 200
 
 
-def get_blur_level(user: int) -> int:
+def get_blur_level(user: int, user2: int=None) -> int:
     """
     A simple function to return the blur level of the
     user's image.
     :param: user: The user that is shown to the current_user.
+    :param: user2: The current user.
     :return: A value for blur level according to the number
     of messages.
     """
 
     if current_user.is_anonymous:
         return 20
-    user2 = current_user.id
+    if user2 is None:
+        user2 = current_user.id
+    
     num_messages = len(
         message.MessageTable.query.filter(
             or_(
@@ -217,6 +220,30 @@ def get_blur_level(user: int) -> int:
         ).all()
     )
     return max(0, 20 - num_messages)
+
+def get_image(user: auth.User, user2: auth.User, pic_name: str = 'picture1', profile=None) -> str:
+    """
+    Getter for the image given by the pic name.
+    :param: user: the user we are trying to get the image for.
+    :param: user2: the current user
+    :param: pic_name: The specific picture we are trying to get
+    :param: profile: user's profile.
+    :return: the base64 encoded picture
+    """
+
+    if profile is None:
+        profile = Profile.query.filter(Profile.email == user.email).first()
+    pic = getattr(profile, pic_name)
+    img = Image.open(io.BytesIO(pic)).filter(
+        ImageFilter.GaussianBlur(get_blur_level(user.id, user2.id))
+    )
+    b_io = io.BytesIO()
+    img.save(b_io, format='JPEG')
+    img.close()
+    return base64.b64encode(
+        b_io.getvalue()
+    ).decode(encoding='utf-8')
+
 
 def get_recepient_images(user: int, profile: Profile = None) -> dict:
     """

@@ -60,6 +60,17 @@ def get_message_recepients():
             )['picture1']
     return matches
 
+def get_updated_pic(user: auth.User, user2: auth.User) -> str:
+    """
+    Provides the first picture of the given user after
+    each message.
+    :param: user: The user we are trying to get its image.
+    :param: user2: the current user.
+    """
+    if (prof.get_blur_level(user.id, user2.id) == 0):
+        return None
+    return prof.get_image(user, user2)
+
 class Message(abstracts.BP):
     """
     The message blueprint. This class would be
@@ -109,11 +120,13 @@ class Message(abstracts.BP):
             # Todo: receive the message through socket for the recepient
             # over here
             Message.sock().emit('receive_msg', {
-                'sender': current_user,
-                'message': msg
+                'sender': current_user.id,
+                'message': msg,
+                'updated_pics': get_updated_pic(current_user, user)
             }, room=Message.sock_sids()[a0])
-            
+
             return Message.create_response(jsonify({
-                'message': 'success'
+                'message': 'success',
+                'updated_pics': get_updated_pic(user, current_user)
             }))
         return [receive_message, send_message]
