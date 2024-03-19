@@ -2,6 +2,7 @@ import inspect
 import re
 from flask import current_app, Blueprint, request, make_response, Response
 from flask_cors import cross_origin
+import flask_socketio
 
 import db
 
@@ -26,6 +27,12 @@ class BP:
 
         db_comps: db.DBComps = current_app.config['DB']
         return db_comps
+    
+    @staticmethod
+    def sock() -> flask_socketio.SocketIO:
+        return current_app.config['SOCKETIO']['IO']
+    def sock_sids() -> dict:
+        return current_app.config['SOCKETIO']['SIDS']
     
     @staticmethod
     def create_response(message: str) -> Response:

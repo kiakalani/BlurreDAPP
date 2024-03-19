@@ -3,7 +3,7 @@ import base64
 import io
 
 
-from flask import jsonify, current_app
+from flask import jsonify, current_app, request
 from flask_login import current_user
 from sqlalchemy import Column, DateTime, String, Integer, or_, and_, Boolean
 
@@ -78,17 +78,42 @@ class Message(abstracts.BP):
                     'message': 'Unauthorized'
                 })), 400
             # Provide the messages
-            return jsonify({
+            return Message.create_response(jsonify({
                 'message': 'success',
                 'info': get_message_recepients()
-            })
+            }))
         def send_message(a0):
             """
             Sends the message and through socket informs the other user
             that the message has been received
             """
-            return jsonify({'Todo': '''
-            Implement messaging to a recepient functionality.
-            Integrate Socket with this.
-            '''})
+            if current_user.is_anonymous:
+                return Message.create_response(jsonify({
+                    'message': 'Unauthorized'
+                })), 400
+            if not a0.isdigit():
+                return Message.create_response(jsonify({
+                    'message': 'Bad request'
+                })), 400
+            uid = int(a0)
+            user = auth.User.query.filter(auth.User.id == uid).first()
+            msg = request.get_json().get('message')
+            if not user or not msg:
+                return Message.create_response(jsonify({
+                    'message': 'Bad request'
+                })), 400
+            msg = MessageTable(current_user.id, user.id, msg)
+            Message.db()['session'].add(msg)
+            Message.db()['session'].commit()
+
+            # Todo: receive the message through socket for the recepient
+            # over here
+            Message.sock().emit('receive_msg', {
+                'sender': current_user,
+                'message': msg
+            }, room=Message.sock_sids()[a0])
+            
+            return Message.create_response(jsonify({
+                'message': 'success'
+            }))
         return [receive_message, send_message]
