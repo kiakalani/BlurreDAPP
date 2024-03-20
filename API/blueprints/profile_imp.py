@@ -109,6 +109,11 @@ class ProfileBP(abstracts.BP):
 
     @staticmethod
     def bp_get():
+        """
+        Get method for providing the same user's information.
+        """
+
+        # error checking
         if current_user.is_anonymous:
             return ProfileBP.create_response(jsonify({
                 'message': 'Invalid User'
@@ -120,7 +125,7 @@ class ProfileBP(abstracts.BP):
         }
         ret_dict['name'] = current_user.name
         ret_dict['id'] = current_user.id
-
+        # providing the profile information including the name and id
         return ProfileBP.create_response(jsonify({
             'message': 'success',
             'profile': ret_dict
