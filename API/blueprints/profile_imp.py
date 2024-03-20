@@ -125,11 +125,12 @@ class ProfileBP(abstracts.BP):
         }
         ret_dict['name'] = current_user.name
         ret_dict['id'] = current_user.id
-        imgs =get_recepient_images(current_user.id)
         for i in range(1, 5):
-            ret_dict[f'picture{i}'] = imgs[f'picture{i}']
             
-        # providing the profile information including the name and id
+            ret_dict[f'picture{i}'] = get_image(
+                current_user, current_user, f'picture{i}', profile
+            )
+        # providing the profile information including the name
         return ProfileBP.create_response(jsonify({
             'message': 'success',
             'profile': ret_dict
@@ -262,9 +263,11 @@ def get_image(user, user2, pic_name: str = 'picture1', profile=None) -> str:
     if profile is None:
         profile = Profile.query.filter(Profile.email == user.email).first()
     pic = getattr(profile, pic_name)
-    img = Image.open(io.BytesIO(pic)).filter(
-        ImageFilter.GaussianBlur(get_blur_level(user.id, user2.id))
-    )
+    img = Image.open(io.BytesIO(pic))
+    if user is not user2:
+        img = img.filter(
+            ImageFilter.GaussianBlur(get_blur_level(user.id, user2.id))
+        )
     b_io = io.BytesIO()
     img.save(b_io, format='JPEG')
     img.close()
@@ -297,10 +300,10 @@ def get_recepient_images(user: int, profile: Profile = None) -> dict:
     }
 
     imgs = {
-        k: (Image.open(io.BytesIO(v)).filter(
+        k: Image.open(io.BytesIO(v)).filter(
             ImageFilter.GaussianBlur(
                 get_blur_level(user.id)
-            ) if user.id != current_user.id else Image.open(io.BytesIO(v)))
+            )
         ) if v is not None else None for k,v in imgs.items()
     }
     for key in imgs:
