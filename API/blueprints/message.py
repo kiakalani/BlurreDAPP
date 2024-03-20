@@ -113,7 +113,7 @@ class Message(abstracts.BP):
             messages = [{key.name: getattr(m, key.name) for key in MessageTable.__table__.columns} for m in messages]
             for m in messages:
                 datetime.datetime.now().timestamp()
-                m['timestamp'] = m['timestamp'].timestamp()
+                m['timestamp'] = int(m['timestamp'].timestamp())
             return jsonify(
                 {
                     'message': 'success',
