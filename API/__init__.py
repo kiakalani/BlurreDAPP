@@ -55,7 +55,7 @@ class FlaskApp:
             self.__app.config['SOCKETIO']['SIDS'][current_user.id] = request.sid
 
         @socket.on('disconnect')
-        def disconnect(auth):
+        def disconnect():
             if current_user.is_anonymous:
                 return
             user_sids = self.__app.config['SOCKETIO']['SIDS']

@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:intl/find_locale.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ui/main.dart';
 import 'dart:convert';
@@ -16,7 +15,8 @@ class ProfileSettingsPage extends StatefulWidget {
 
 class ProfileSettingsPageState extends State<ProfileSettingsPage> {
   final _formKey = GlobalKey<FormState>();
-  Uint8List? _imageBytes;
+  // For storing up to 4 images
+  final List<Uint8List?> _imageBytesList = List.filled(4, null);
   final ImagePicker _picker = ImagePicker();
   // Selected option for profile settings
   String? _gender, _sexOrientation, _lookingFor, _exercise, _starSign, _drinking, _smoking, _religion;
@@ -32,22 +32,66 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
   final _heightController = TextEditingController();
   final _bioController = TextEditingController();
 
-  Future<void> _pickImage() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+  @override
+  void initState() {
+    super.initState();
+    // Initialize profile details 
+    _fetchProfileSettings();
+  }
 
+  void _fetchProfileSettings() {
+    Authorization().getRequest("/profile/").then((value) {
+      print(value);
+      final responseBody = json.decode(value.toString());
+      if (responseBody['profile'] != null) {
+            final String picture1 = responseBody['profile']['picture1'] ?? '';
+            final String picture2 = responseBody['profile']['picture2'] ?? '';
+            final String picture3 = responseBody['profile']['picture3'] ?? '';
+            final String picture4 = responseBody['profile']['picture4'] ?? '';
+            final String bio = responseBody['profile']['bio'] ?? '';
+            final int height = responseBody['profile']['height'] ?? '';
+            final String gender = responseBody['profile']['gender'] ?? '';
+            final String sexOrientation = responseBody['profile']['orientation'] ?? '';
+            final String lookingFor = responseBody['profile']['looking_for'] ?? '';
+            final String exercise = responseBody['profile']['exercise'] ?? '';
+            final String starSign = responseBody['profile']['star_sign'] ?? '';
+            final String drinking = responseBody['profile']['drinking'] ?? '';
+            final String smoking = responseBody['profile']['smoking'] ?? '';
+            final String religion = responseBody['profile']['religion'] ?? '';
+            setState(() {
+              _imageBytesList[0] = picture1 == '' ? null : base64Decode(picture1);
+              _imageBytesList[1] = picture2 == '' ? null : base64Decode(picture2);
+              _imageBytesList[2] = picture3 == '' ? null : base64Decode(picture3);
+              _imageBytesList[3] = picture4 == '' ? null : base64Decode(picture4);
+              _bioController.text = bio;
+              _heightController.text = height.toString();
+              _gender = gender;
+              _sexOrientation = sexOrientation;
+              _lookingFor = lookingFor;
+              _exercise = exercise;
+              _starSign = starSign;
+              _drinking = drinking;
+              _smoking = smoking;
+              _religion = religion;
+            });
+      }
+    });
+  }
+
+  // pick image from gallery
+  Future<void> _pickImage(int index) async {
+    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       final Uint8List imageBytes = await pickedFile.readAsBytes();
-      //String base64Encode(List<int> bytes) => base64.encode(bytes);
-      print(base64.encode(imageBytes));
       setState(() {
-        _imageBytes = imageBytes;
+        _imageBytesList[index] = imageBytes; // Update the specific image in the list
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-     Authorization().isLoggedIn().then((logged_in) => {
+    Authorization().isLoggedIn().then((logged_in) => {
           if (!logged_in)
             {
               Navigator.of(context).push(
@@ -61,6 +105,9 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
     } else if (Platform.isIOS || Platform.isAndroid) {
       fieldWidth = MediaQuery.of(context).size.width * 0.8;
     }
+    double gridSpacing = 10; 
+    // the size for each square
+    double squareSize = (fieldWidth - gridSpacing) / 2;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile Settings'),
@@ -76,17 +123,44 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // Upload photo field
-                  if (_imageBytes != null)
-                    SizedBox(
-                      width: 100,
-                      height: 100,
-                      child: Image.memory(_imageBytes!),
+                  SizedBox(
+                    width: fieldWidth,
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      // disable GridView's own scrolling
+                      physics: const NeverScrollableScrollPhysics(), 
+                      itemCount: 4,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2, // 2 squares in a row
+                        crossAxisSpacing: gridSpacing,
+                        mainAxisSpacing: gridSpacing,
+                        childAspectRatio: 1,                      
+                      ),
+                      itemBuilder: (context, index) {
+                        return InkWell(
+                          onTap: () => _pickImage(index),
+                            child: Container(
+                              width: squareSize,
+                              height: squareSize,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: _imageBytesList[index] == null ? Colors.grey : null,
+                                image: _imageBytesList[index] != null
+                                    ? DecorationImage(
+                                        image: MemoryImage(_imageBytesList[index]!),
+                                        fit: BoxFit.cover,
+                                      )
+                                    : null,
+        
+                              ),
+                              child: _imageBytesList[index] == null
+                                  ? const Icon(Icons.add, color: Colors.white)
+                                  : null,
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                  ElevatedButton(
-                    onPressed: _pickImage,
-                    child: const Text('Upload Photo'),
-                  ),
-                  const SizedBox(height: 20),
 
                   // Bio field
                   SizedBox(
@@ -115,6 +189,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                   SizedBox(
                     width: fieldWidth,
                     child: DropdownButtonFormField(
+                      value: _gender,
                       decoration: const InputDecoration(labelText: 'Gender'),
                       items: _genders.map((String value) {
                         return DropdownMenuItem<String>(
@@ -135,6 +210,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                   SizedBox(
                     width: fieldWidth,
                     child: DropdownButtonFormField(
+                      value: _sexOrientation,
                       decoration: const InputDecoration(labelText: 'Sex Orientation'),
                       items: _orientations.map((String value) {
                         return DropdownMenuItem<String>(
@@ -155,6 +231,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                   SizedBox(
                     width: fieldWidth,
                     child: DropdownButtonFormField(
+                      value: _lookingFor,
                       decoration: const InputDecoration(labelText: 'Looking for'),
                       items: _lookingFors.map((String value) {
                         return DropdownMenuItem<String>(
@@ -175,6 +252,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                   SizedBox(
                     width: fieldWidth,
                     child: DropdownButtonFormField(
+                      value: _exercise,
                       decoration: const InputDecoration(labelText: 'Exercise'),
                       items: _exercises.map((String value) {
                         return DropdownMenuItem<String>(
@@ -195,6 +273,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                   SizedBox(
                     width: fieldWidth,
                     child: DropdownButtonFormField(
+                      value: _starSign,
                       decoration: const InputDecoration(labelText: 'Star sign'),
                       items: _starSigns.map((String value) {
                         return DropdownMenuItem<String>(
@@ -215,6 +294,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                   SizedBox(
                     width: fieldWidth,
                     child: DropdownButtonFormField(
+                      value: _drinking,
                       decoration: const InputDecoration(labelText: 'Drinking'),
                       items: _drinkings.map((String value) {
                         return DropdownMenuItem<String>(
@@ -235,6 +315,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                   SizedBox(
                     width: fieldWidth,
                     child: DropdownButtonFormField(
+                      value: _smoking,
                       decoration: const InputDecoration(labelText: 'Smoking'),
                       items: _smokings.map((String value) {
                         return DropdownMenuItem<String>(
@@ -255,6 +336,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                   SizedBox(
                     width: fieldWidth,
                     child: DropdownButtonFormField(
+                      value: _religion,
                       decoration: const InputDecoration(labelText: 'Religion'),
                       items: _religions.map((String value) {
                         return DropdownMenuItem<String>(
@@ -286,14 +368,16 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                           'drinking': _drinking,
                           'smoking': _smoking,
                           'religion': _religion,
-                          'picture1': _imageBytes != null ? base64.encode(_imageBytes!) : null,
+                          'picture1': _imageBytesList[0] != null ? base64.encode(_imageBytesList[0]!) : null,
+                          'picture2': _imageBytesList[1] != null ? base64.encode(_imageBytesList[1]!) : null,
+                          'picture3': _imageBytesList[2] != null ? base64.encode(_imageBytesList[2]!) : null,
+                          'picture4': _imageBytesList[3] != null ? base64.encode(_imageBytesList[3]!) : null,
                         }).then((resp) => {
                           if (resp.statusCode == 200) {
                             // Successfully modified
                           }
                         });
                       }
-                      print('picture1: ' + base64.encode(_imageBytes!));
                     },
                     child: const Text('Save'),
                   ),

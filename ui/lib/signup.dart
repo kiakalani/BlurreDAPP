@@ -1,17 +1,9 @@
 import 'dart:io';
-//import 'package:dio/browser.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as developer;
-//import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:dio/dio.dart';
-import 'package:dio_cookie_manager/dio_cookie_manager.dart';
-import 'package:cookie_jar/cookie_jar.dart';
 import 'package:ui/auth.dart';
 import 'package:ui/main.dart';
-import 'package:intl/intl.dart';
-import 'login.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});

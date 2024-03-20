@@ -1,18 +1,22 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:ui/auth.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
 
-class MessagePage extends StatefulWidget {
-  final String otherPersonName;
-  final String otherPersonProfilePicture;
-  final String currentUserProfilePicture;
+import 'package:ui/sock.dart';
 
-  const MessagePage({
-    required this.otherPersonName,
-    required this.otherPersonProfilePicture,
-    required this.currentUserProfilePicture,
+class MessagePage extends StatefulWidget {
+  final String otherUserName;
+  Uint8List? otherUserProfilePicture;
+  final String otherUserId;
+
+  MessagePage({
+    required this.otherUserName,
+    required this.otherUserProfilePicture,
+    required this.otherUserId,
   });
 
   @override
@@ -36,7 +40,9 @@ class MessagePageState extends State<MessagePage> {
   final TextEditingController _messageController = TextEditingController();
   late IO.Socket socket;
   List<Message> _messages = [];
+  List<dynamic> messages = [];
   Uint8List? _currentUserProfilePicture;
+  String? _currentUserId;
 
   @override
   void initState() {
@@ -60,38 +66,53 @@ class MessagePageState extends State<MessagePage> {
       ),
     ];
 
-    _initSocket();
+    // _initSocket();
     _fetchAndSetProfilePicture();
   }
 
   void _fetchAndSetProfilePicture() {
-    Authorization().postRequest("/profile/details/", {
-      "user_id": "1"
-    }).then((value) {
+    Authorization().getRequest("/profile/").then((value) {
       final responseBody = json.decode(value.toString()); 
-      if (responseBody['profile'] != null && responseBody['profile']['picture1'] != null) {
+      if (responseBody['profile'] != null && 
+          responseBody['profile']['picture1'] != null &&
+          responseBody['profile']['id'] != null) {
         final String base64Image = responseBody['profile']['picture1'];
+        final String currentUserId = responseBody['profile']['id'].toString();
+        _currentUserId = currentUserId;
         setState(() {
           _currentUserProfilePicture = base64Decode(base64Image);
+          _fetchMessages();
         });
       }
     });
   }
-
-  void _initSocket() {
-    socket = IO.io('http://localhost:3001', <String, dynamic>{
-      'transports':['websocket'],
+ 
+  void _fetchMessages() {
+    Authorization().getRequest("/message/${widget.otherUserId}/").then((value) {
+      final responseBody = json.decode(value.toString());
+      if (responseBody['messages'] != null) {
+        List<Message> texts = [];
+        messages = List<dynamic>.from(responseBody['messages']);
+        messages.forEach((element) {
+          String text = element['message'];
+          bool isCurrentUser = (element['sender'].toString() == _currentUserId); 
+          DateTime d = DateTime.fromMillisecondsSinceEpoch(element['timestamp'] * 1000);
+          texts.add(Message(text: text, isCurrentUser: isCurrentUser, timestamp: d));
+        });
+        setState(() {
+          _messages = texts;
+        });
+      }
     });
-
-    socket.onConnect((_) {
-      print('Connected to Socket.IO');
+    SocketIO().on('receive_msg', (p0) => {
+      setState(() {
+        _messages.add(Message(text: p0['message']['message'], isCurrentUser: false, timestamp: DateTime.fromMillisecondsSinceEpoch(p0['message']['timestamp'] * 1000)));
+      })
+      // setState(() {
+        
+      //   _messages.add();
+      // })
     });
-
-    socket.on('message', (data) {
-      print('Received message: $data');
-    });
-
-    socket.onDisconnect((_) => print('Disconnected from Socket.IO server'));
   }
 
   void _sendMessage() {
@@ -102,9 +123,17 @@ class MessagePageState extends State<MessagePage> {
         isCurrentUser: true,
         timestamp: DateTime.now(),
       );
-      setState(() {
-        _messages.add(message);
-      });
+        Authorization().postRequest('/message/${widget.otherUserId}/', {
+          'message': message.text
+        }).then((value) => {
+          setState(() {
+            _messages.add(message);
+            var responseBody = json.decode(value.toString());
+            if (responseBody['updated_pics'] != null) {
+              widget.otherUserProfilePicture = base64Decode(responseBody['updated_pics']);
+            }
+          }),
+        });
       _messageController.clear();
       // send message to the server
     }
@@ -114,7 +143,7 @@ class MessagePageState extends State<MessagePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.otherPersonName),
+        title: Text(widget.otherUserName),
       ),
       body: Column(
         children: [
@@ -126,7 +155,7 @@ class MessagePageState extends State<MessagePage> {
                 return ListTile(
                   // display profile picture of the other user
                   leading: message.isCurrentUser ? null : CircleAvatar(
-                    backgroundImage: NetworkImage(widget.otherPersonProfilePicture),
+                    backgroundImage: widget.otherUserProfilePicture != null ? MemoryImage(widget.otherUserProfilePicture!) : null,
                   ),
                   // display profile picture of the current user
                   trailing: message.isCurrentUser ? CircleAvatar(
@@ -202,7 +231,7 @@ class MessagePageState extends State<MessagePage> {
       ),
     );
   }
-
+  
   String _formatTimestamp(DateTime timestamp) {
     return "${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}";
   }
@@ -215,3 +244,8 @@ class MessagePageState extends State<MessagePage> {
   }
 }
 
+// to send message: make a post request to the `/message/<other_user_id>/` to send a message.
+// For the body of the message send: {'message': 'The text you are trying to send'}.
+
+// to receive all the messages when you open the page:
+// Make a get request to `/message/<other_user_id>/`
