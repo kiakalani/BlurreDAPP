@@ -1,6 +1,7 @@
 import datetime
 import base64
 import io
+import calendar
 
 
 from flask import jsonify, current_app, request
@@ -110,7 +111,8 @@ class Message(abstracts.BP):
                 )
             ).all()
             messages = [{key.name: getattr(m, key.name) for key in MessageTable.__table__.columns} for m in messages]
-
+            for m in messages:
+                m['timestamp'] = calendar.timegm(m['timestamp'].timetuple())
             return jsonify(
                 {
                     'message': 'success',
