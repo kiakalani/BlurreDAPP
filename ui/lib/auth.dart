@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
+import 'package:ui/sock.dart';
 import 'http_client_adapter.dart'; // Make sure to import the conditional adapter file
 
 class Authorization {
@@ -48,6 +49,11 @@ class Authorization {
   Future<bool> isLoggedIn() async {
     var resp = await postRequest("/auth/logged_in/", {});
 
-    return resp.data['logged_in'] == true;
+    if (resp.data['logged_in'] == true)
+    {
+      SocketIO('http://localhost:3001');
+      return true;
+    }
+    return false;
   }
 }

@@ -1,15 +1,19 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:ui/auth.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
 
+import 'package:ui/sock.dart';
+
 class MessagePage extends StatefulWidget {
   final String otherUserName;
-  final Uint8List? otherUserProfilePicture;
+  Uint8List? otherUserProfilePicture;
   final String otherUserId;
 
-  const MessagePage({
+  MessagePage({
     required this.otherUserName,
     required this.otherUserProfilePicture,
     required this.otherUserId,
@@ -36,8 +40,9 @@ class MessagePageState extends State<MessagePage> {
   final TextEditingController _messageController = TextEditingController();
   late IO.Socket socket;
   List<Message> _messages = [];
-  List<String> messages = [];
+  List<dynamic> messages = [];
   Uint8List? _currentUserProfilePicture;
+  String? _currentUserId;
 
   @override
   void initState() {
@@ -61,48 +66,53 @@ class MessagePageState extends State<MessagePage> {
       ),
     ];
 
-    _initSocket();
+    // _initSocket();
     _fetchAndSetProfilePicture();
-    _fetchMessages();
   }
 
   void _fetchAndSetProfilePicture() {
     Authorization().getRequest("/profile/").then((value) {
       final responseBody = json.decode(value.toString()); 
-      if (responseBody['profile'] != null && responseBody['profile']['picture1'] != null) {
+      if (responseBody['profile'] != null && 
+          responseBody['profile']['picture1'] != null &&
+          responseBody['profile']['id'] != null) {
         final String base64Image = responseBody['profile']['picture1'];
+        final String currentUserId = responseBody['profile']['id'].toString();
+        _currentUserId = currentUserId;
         setState(() {
           _currentUserProfilePicture = base64Decode(base64Image);
+          _fetchMessages();
         });
       }
     });
   }
-
+ 
   void _fetchMessages() {
     Authorization().getRequest("/message/${widget.otherUserId}/").then((value) {
       final responseBody = json.decode(value.toString());
       if (responseBody['messages'] != null) {
+        List<Message> texts = [];
+        messages = List<dynamic>.from(responseBody['messages']);
+        messages.forEach((element) {
+          String text = element['message'];
+          bool isCurrentUser = (element['sender'].toString() == _currentUserId); 
+          DateTime d = DateTime.fromMillisecondsSinceEpoch(element['timestamp'] * 1000);
+          texts.add(Message(text: text, isCurrentUser: isCurrentUser, timestamp: d));
+        });
         setState(() {
-          messages = List<String>.from(responseBody['messages']);
+          _messages = texts;
         });
       }
     });
-  }
-
-  void _initSocket() {
-    socket = IO.io('http://localhost:3001', <String, dynamic>{
-      'transports':['websocket'],
+    SocketIO().on('receive_msg', (p0) => {
+      setState(() {
+        _messages.add(Message(text: p0['message']['message'], isCurrentUser: false, timestamp: DateTime.fromMillisecondsSinceEpoch(p0['message']['timestamp'] * 1000)));
+      })
+      // setState(() {
+        
+      //   _messages.add();
+      // })
     });
-
-    socket.onConnect((_) {
-      print('Connected to Socket.IO');
-    });
-
-    socket.on('message', (data) {
-      print('Received message: $data');
-    });
-
-    socket.onDisconnect((_) => print('Disconnected from Socket.IO server'));
   }
 
   void _sendMessage() {
@@ -113,14 +123,17 @@ class MessagePageState extends State<MessagePage> {
         isCurrentUser: true,
         timestamp: DateTime.now(),
       );
-      setState(() {
         Authorization().postRequest('/message/${widget.otherUserId}/', {
           'message': message.text
         }).then((value) => {
-          _messages.add(message)
+          setState(() {
+            _messages.add(message);
+            var responseBody = json.decode(value.toString());
+            if (responseBody['updated_pics'] != null) {
+              widget.otherUserProfilePicture = base64Decode(responseBody['updated_pics']);
+            }
+          }),
         });
-        
-      });
       _messageController.clear();
       // send message to the server
     }
@@ -218,7 +231,7 @@ class MessagePageState extends State<MessagePage> {
       ),
     );
   }
-
+  
   String _formatTimestamp(DateTime timestamp) {
     return "${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}";
   }

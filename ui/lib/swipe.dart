@@ -32,7 +32,6 @@ class SwipePageState extends State<SwipePage> {
       if (responseBody['ids'] != null) {
         setState(() {
           _userIds = List<int>.from(responseBody['ids']);
-          print(_userIds);
           if (_userIds!.isEmpty) {
             // Show that there are no more matching users
           } else {
@@ -70,7 +69,6 @@ class SwipePageState extends State<SwipePage> {
     Authorization().postRequest("/profile/details/", {
       "user_id": _currentUserId.toString()
     }).then((value) {
-      print(value);
       final responseBody = json.decode(value.toString()); 
       if (responseBody['profile'] != null && 
           responseBody['profile']['name'] != null &&
