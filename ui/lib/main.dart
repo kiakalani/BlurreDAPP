@@ -6,7 +6,6 @@ import 'package:ui/profile_setting.dart';
 import 'swipe.dart';
 import 'login.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:flutter/foundation.dart';
 
 Future<String> readBase64Image(String assetPath) async {
   return await rootBundle.loadString(assetPath);

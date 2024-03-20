@@ -5,14 +5,14 @@ import 'package:flutter/foundation.dart';
 import 'dart:convert';
 
 class MessagePage extends StatefulWidget {
-  final String otherPersonName;
-  final String otherPersonProfilePicture;
-  final String currentUserProfilePicture;
+  final String otherUserName;
+  final Uint8List? otherUserProfilePicture;
+  final String otherUserId;
 
   const MessagePage({
-    required this.otherPersonName,
-    required this.otherPersonProfilePicture,
-    required this.currentUserProfilePicture,
+    required this.otherUserName,
+    required this.otherUserProfilePicture,
+    required this.otherUserId,
   });
 
   @override
@@ -36,6 +36,7 @@ class MessagePageState extends State<MessagePage> {
   final TextEditingController _messageController = TextEditingController();
   late IO.Socket socket;
   List<Message> _messages = [];
+  List<String> messages = [];
   Uint8List? _currentUserProfilePicture;
 
   @override
@@ -62,6 +63,7 @@ class MessagePageState extends State<MessagePage> {
 
     _initSocket();
     _fetchAndSetProfilePicture();
+    _fetchMessages();
   }
 
   void _fetchAndSetProfilePicture() {
@@ -73,6 +75,17 @@ class MessagePageState extends State<MessagePage> {
         final String base64Image = responseBody['profile']['picture1'];
         setState(() {
           _currentUserProfilePicture = base64Decode(base64Image);
+        });
+      }
+    });
+  }
+
+  void _fetchMessages() {
+    Authorization().getRequest("/message/" + widget.otherUserId + "/").then((value) {
+      final responseBody = json.decode(value.toString()); 
+      if (responseBody['messages'] != null) {
+        setState(() {
+          messages = List<String>.from(responseBody['messages']);
         });
       }
     });
@@ -114,7 +127,7 @@ class MessagePageState extends State<MessagePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.otherPersonName),
+        title: Text(widget.otherUserName),
       ),
       body: Column(
         children: [
@@ -126,7 +139,7 @@ class MessagePageState extends State<MessagePage> {
                 return ListTile(
                   // display profile picture of the other user
                   leading: message.isCurrentUser ? null : CircleAvatar(
-                    backgroundImage: NetworkImage(widget.otherPersonProfilePicture),
+                    backgroundImage: widget.otherUserProfilePicture != null ? MemoryImage(widget.otherUserProfilePicture!) : null,
                   ),
                   // display profile picture of the current user
                   trailing: message.isCurrentUser ? CircleAvatar(
