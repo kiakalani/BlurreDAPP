@@ -16,8 +16,8 @@ class SwipePageState extends State<SwipePage> {
   String? _bio;
   String? _name;
   int? _age;
-  List<int>? userIds;
-  int? currentUserId;
+  List<int>? _userIds;
+  int? _currentUserId;
 
   @override
   void initState() {
@@ -31,29 +31,32 @@ class SwipePageState extends State<SwipePage> {
       final responseBody = json.decode(value.toString()); 
       if (responseBody['ids'] != null) {
         setState(() {
-          userIds = List<int>.from(responseBody['ids']);
-          print(userIds);
-          if (userIds!.isEmpty) {
+          _userIds = List<int>.from(responseBody['ids']);
+          print(_userIds);
+          if (_userIds!.isEmpty) {
             // Show that there are no more matching users
-          } else 
-          // get current user id
-          _getCurrentUserId();
+          } else {
+            // get current user id
+            _getCurrentUserId();
+          } 
         });
       }
     });
   }
 
   void _getCurrentUserId() {
-    if (userIds != null && userIds!.isNotEmpty) {
-      currentUserId = userIds!.removeAt(0);
+    if (_userIds != null && _userIds!.isNotEmpty) {
+      _currentUserId = _userIds!.removeAt(0);
       // Initialize profile details 
       _fetchProfileDetails();
-    } else _fetchUserIds();
+    } else {
+      _fetchUserIds();
+    }
   }
 
   void swipe(String action) async {
     Authorization().postRequest('/swipe/', {
-      "swiped": currentUserId.toString(),
+      "swiped": _currentUserId.toString(),
       "action": action
     }).then((value) => {
       if (value.statusCode == 200) {
@@ -65,7 +68,7 @@ class SwipePageState extends State<SwipePage> {
 
   void _fetchProfileDetails() {
     Authorization().postRequest("/profile/details/", {
-      "user_id": currentUserId.toString()
+      "user_id": _currentUserId.toString()
     }).then((value) {
       print(value);
       final responseBody = json.decode(value.toString()); 
@@ -102,7 +105,9 @@ class SwipePageState extends State<SwipePage> {
                 child: GestureDetector(
                   onTap: () {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (context) => ProfileDetailsPage(currentUserId: currentUserId.toString())));
+                      MaterialPageRoute(builder: (context) => ProfileDetailsPage(
+                        currentUserId: _currentUserId.toString(),
+                      )));
                   },
                   child: Image.memory(_profilePicture!, fit: BoxFit.cover),
                 ),
