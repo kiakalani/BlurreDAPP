@@ -161,9 +161,11 @@ class Message(abstracts.BP):
             # Todo: receive the message through socket for the recepient
             # over here
             if Message.sock_sids().get(uid):
+                msg_obj = {key.name: getattr(msg ,key.name) for key in msg.__table__.columns}
+                msg_obj['timestamp'] = int(msg_obj['timestamp'].timestamp())
                 Message.sock().emit('receive_msg', {
                     'sender': current_user.id,
-                    'message': {key.name: getattr(msg ,key.name) for key in msg.__table__.columns},
+                    'message': msg_obj,
                     'updated_pics': get_updated_pic(current_user, user)
                 }, room=Message.sock_sids()[uid])
 
