@@ -67,9 +67,7 @@ class MessagePageState extends State<MessagePage> {
   }
 
   void _fetchAndSetProfilePicture() {
-    Authorization().postRequest("/profile/details/", {
-      "user_id": "1"
-    }).then((value) {
+    Authorization().getRequest("/profile/").then((value) {
       final responseBody = json.decode(value.toString()); 
       if (responseBody['profile'] != null && responseBody['profile']['picture1'] != null) {
         final String base64Image = responseBody['profile']['picture1'];
@@ -81,8 +79,8 @@ class MessagePageState extends State<MessagePage> {
   }
 
   void _fetchMessages() {
-    Authorization().getRequest("/message/" + widget.otherUserId + "/").then((value) {
-      final responseBody = json.decode(value.toString()); 
+    Authorization().getRequest("/message/${widget.otherUserId}/").then((value) {
+      final responseBody = json.decode(value.toString());
       if (responseBody['messages'] != null) {
         setState(() {
           messages = List<String>.from(responseBody['messages']);
@@ -116,7 +114,12 @@ class MessagePageState extends State<MessagePage> {
         timestamp: DateTime.now(),
       );
       setState(() {
-        _messages.add(message);
+        Authorization().postRequest('/message/${widget.otherUserId}/', {
+          'message': message.text
+        }).then((value) => {
+          _messages.add(message)
+        });
+        
       });
       _messageController.clear();
       // send message to the server
@@ -228,3 +231,8 @@ class MessagePageState extends State<MessagePage> {
   }
 }
 
+// to send message: make a post request to the `/message/<other_user_id>/` to send a message.
+// For the body of the message send: {'message': 'The text you are trying to send'}.
+
+// to receive all the messages when you open the page:
+// Make a get request to `/message/<other_user_id>/`
