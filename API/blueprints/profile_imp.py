@@ -263,6 +263,8 @@ def get_image(user, user2, pic_name: str = 'picture1', profile=None) -> str:
     if profile is None:
         profile = Profile.query.filter(Profile.email == user.email).first()
     pic = getattr(profile, pic_name)
+    if pic is None:
+        return None
     img = Image.open(io.BytesIO(pic))
     if user is not user2:
         img = img.filter(
