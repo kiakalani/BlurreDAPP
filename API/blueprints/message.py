@@ -163,7 +163,7 @@ class Message(abstracts.BP):
             if Message.sock_sids().get(uid):
                 Message.sock().emit('receive_msg', {
                     'sender': current_user.id,
-                    'message': msg,
+                    'message': {key.name: getattr(msg ,key.name) for key in msg.__table__.columns},
                     'updated_pics': get_updated_pic(current_user, user)
                 }, room=Message.sock_sids()[uid])
 
