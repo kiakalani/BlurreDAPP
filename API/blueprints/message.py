@@ -109,6 +109,7 @@ class Message(abstracts.BP):
                     )
                 )
             ).all()
+            messages = [{key : getattr(m, key) for key in m.__table__.columns} for m in messages]
             return jsonify(
                 {
                     'message': 'success',
