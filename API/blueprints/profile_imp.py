@@ -108,6 +108,25 @@ class ProfileBP(abstracts.BP):
         super().__init__('profile')
 
     @staticmethod
+    def bp_get():
+        if current_user.is_anonymous:
+            return ProfileBP.create_response(jsonify({
+                'message': 'Invalid User'
+            })), 400
+        profile = Profile.query.filter(Profile.email == current_user.email).first()
+        ret_dict = {
+            c.name: getattr(profile, c.name) \
+                for c in Profile.__table__.columns
+        }
+        ret_dict['name'] = current_user.name
+        ret_dict['id'] = current_user.id
+
+        return ProfileBP.create_response(jsonify({
+            'message': 'success',
+            'profile': ret_dict
+        })), 200
+
+    @staticmethod
     def bp_post():
         """
         A post method to deal with updating elements of the
