@@ -81,6 +81,39 @@ class Message(abstracts.BP):
 
     def __init__(self) -> None:
         super().__init__('message')
+        sock = Message.sock()
+        @sock.on('seen')
+        def handle_seen(data):
+            """
+            Sets the messages to seen.
+            """
+
+            # error checking
+            if current_user.is_anonymous:
+                return
+            dest = data.get('dest')
+            # Making sure dest is valid
+            if dest and isinstance(dest, str) and dest.isdigit():
+                user = auth.User.query.filter(auth.User.id == dest).first()
+                # Making sure user is valid
+                if user:
+                    # Getting all the unread messages
+                    msgs =  MessageTable.query.filter(
+                       and_(
+                           MessageTable.read == False,
+                           and_(
+                                MessageTable.sender == user.id,
+                                MessageTable.receiver == current_user.id
+                            )
+                        )
+                    ).all()
+                    # Setting seen to true
+                    for m in msgs:
+                        m.read = True
+                    Message.db()['session'].commit()
+            
+                    
+
     @staticmethod
     def bp_get() -> list:
         def get_related_msgs(a0):
