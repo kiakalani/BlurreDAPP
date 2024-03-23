@@ -13,11 +13,10 @@ class MessagePage extends StatefulWidget {
   Uint8List? otherUserProfilePicture;
   final String otherUserId;
 
-  MessagePage({
-    required this.otherUserName,
-    required this.otherUserProfilePicture,
-    required this.otherUserId,
-  });
+  MessagePage(
+      {required this.otherUserName,
+      required this.otherUserProfilePicture,
+      required this.otherUserId});
 
   @override
   MessagePageState createState() => MessagePageState();
@@ -26,14 +25,15 @@ class MessagePage extends StatefulWidget {
 class Message {
   String text;
   // True if the message was sent by the current user
-  bool isCurrentUser; 
+  bool isCurrentUser;
   DateTime timestamp;
+  bool seen;
 
-  Message({
-    required this.text,
-    required this.isCurrentUser,
-    required this.timestamp,
-  });
+  Message(
+      {required this.text,
+      required this.isCurrentUser,
+      required this.timestamp,
+      required this.seen});
 }
 
 class MessagePageState extends State<MessagePage> {
@@ -43,28 +43,11 @@ class MessagePageState extends State<MessagePage> {
   List<dynamic> messages = [];
   Uint8List? _currentUserProfilePicture;
   String? _currentUserId;
+  bool _isSeen = false;
 
   @override
   void initState() {
     super.initState();
-    // Initialize with some test messages
-    _messages = [
-      Message(
-        text: 'Hello, how are you?',
-        isCurrentUser: false,
-        timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
-      ),
-      Message(
-        text: 'I\'m fine, thanks! And you?',
-        isCurrentUser: true,
-        timestamp: DateTime.now().subtract(const Duration(minutes: 3)),
-      ),
-      Message(
-        text: 'I\'m doing well too.',
-        isCurrentUser: false,
-        timestamp: DateTime.now().subtract(const Duration(minutes: 1)),
-      ),
-    ];
 
     // _initSocket();
     _fetchAndSetProfilePicture();
@@ -72,8 +55,8 @@ class MessagePageState extends State<MessagePage> {
 
   void _fetchAndSetProfilePicture() {
     Authorization().getRequest("/profile/").then((value) {
-      final responseBody = json.decode(value.toString()); 
-      if (responseBody['profile'] != null && 
+      final responseBody = json.decode(value.toString());
+      if (responseBody['profile'] != null &&
           responseBody['profile']['picture1'] != null &&
           responseBody['profile']['id'] != null) {
         final String base64Image = responseBody['profile']['picture1'];
@@ -86,54 +69,76 @@ class MessagePageState extends State<MessagePage> {
       }
     });
   }
- 
+
   void _fetchMessages() {
     Authorization().getRequest("/message/${widget.otherUserId}/").then((value) {
       final responseBody = json.decode(value.toString());
       if (responseBody['messages'] != null) {
         List<Message> texts = [];
         messages = List<dynamic>.from(responseBody['messages']);
-        messages.forEach((element) {
+        for (var element in messages) {
           String text = element['message'];
-          bool isCurrentUser = (element['sender'].toString() == _currentUserId); 
-          DateTime d = DateTime.fromMillisecondsSinceEpoch(element['timestamp'] * 1000);
-          texts.add(Message(text: text, isCurrentUser: isCurrentUser, timestamp: d));
-        });
+          bool isCurrentUser = (element['sender'].toString() == _currentUserId);
+          DateTime d =
+              DateTime.fromMillisecondsSinceEpoch(element['timestamp'] * 1000);
+          bool seen = element['read'].toString() == 'true';
+          texts.add(Message(
+              text: text,
+              isCurrentUser: isCurrentUser,
+              timestamp: d,
+              seen: seen));
+        }
         setState(() {
           _messages = texts;
         });
+        SocketIO().emit('seen', {'dest': widget.otherUserId});
       }
     });
-    SocketIO().on('receive_msg', (p0) => {
-      setState(() {
-        _messages.add(Message(text: p0['message']['message'], isCurrentUser: false, timestamp: DateTime.fromMillisecondsSinceEpoch(p0['message']['timestamp'] * 1000)));
-      })
-      // setState(() {
-        
-      //   _messages.add();
-      // })
-    });
+    SocketIO().on(
+        'receive_msg',
+        (p0) => {
+              setState(() {
+                _messages.add(Message(
+                    text: p0['message']['message'],
+                    isCurrentUser: false,
+                    timestamp: DateTime.fromMillisecondsSinceEpoch(
+                        p0['message']['timestamp'] * 1000),
+                    seen: true));
+              }),
+              SocketIO().emit('seen', {'dest': widget.otherUserId}),
+            });
+
+    SocketIO().on(
+        'seen_last',
+        (p0) => {
+              if (p0['user'] != null && p0['user'].toString() == widget.otherUserId) {
+                _isSeen = true,
+                setState(() => _isSeen = true)
+              }
+            });
   }
 
   void _sendMessage() {
     final String text = _messageController.text.trim();
     if (text.isNotEmpty) {
       final message = Message(
-        text: text,
-        isCurrentUser: true,
-        timestamp: DateTime.now(),
-      );
-        Authorization().postRequest('/message/${widget.otherUserId}/', {
-          'message': message.text
-        }).then((value) => {
-          setState(() {
-            _messages.add(message);
-            var responseBody = json.decode(value.toString());
-            if (responseBody['updated_pics'] != null) {
-              widget.otherUserProfilePicture = base64Decode(responseBody['updated_pics']);
-            }
-          }),
-        });
+          text: text,
+          isCurrentUser: true,
+          timestamp: DateTime.now(),
+          seen: false);
+      _isSeen = false;
+      Authorization().postRequest('/message/${widget.otherUserId}/', {
+        'message': message.text
+      }).then((value) => {
+            setState(() {
+              _messages.add(message);
+              var responseBody = json.decode(value.toString());
+              if (responseBody['updated_pics'] != null) {
+                widget.otherUserProfilePicture =
+                    base64Decode(responseBody['updated_pics']);
+              }
+            }),
+          });
       _messageController.clear();
       // send message to the server
     }
@@ -149,54 +154,79 @@ class MessagePageState extends State<MessagePage> {
         children: [
           Expanded(
             child: ListView.builder(
-              itemCount: _messages.length,
-              itemBuilder: (BuildContext context, int index) {
-                final message = _messages[index];
-                return ListTile(
-                  // display profile picture of the other user
-                  leading: message.isCurrentUser ? null : CircleAvatar(
-                    backgroundImage: widget.otherUserProfilePicture != null ? MemoryImage(widget.otherUserProfilePicture!) : null,
-                  ),
-                  // display profile picture of the current user
-                  trailing: message.isCurrentUser ? CircleAvatar(
-                    backgroundImage: _currentUserProfilePicture != null ? MemoryImage(_currentUserProfilePicture!) : null,
-                  ) : null,
-                  title: Align(
-                    alignment: message.isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                      decoration: BoxDecoration(
-                        color: message.isCurrentUser ? Colors.blue[100] : Colors.green[100],
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              message.text,
-                              style: const TextStyle(color: Colors.black),
+                itemCount: _messages.length,
+                itemBuilder: (BuildContext context, int index) {
+                  final message = _messages[index];
+                  return ListTile(
+                    // display profile picture of the other user
+                    leading: message.isCurrentUser
+                        ? null
+                        : CircleAvatar(
+                            backgroundImage: widget.otherUserProfilePicture !=
+                                    null
+                                ? MemoryImage(widget.otherUserProfilePicture!)
+                                : null,
+                          ),
+                    // display profile picture of the current user
+                    trailing: message.isCurrentUser
+                        ? CircleAvatar(
+                            backgroundImage: _currentUserProfilePicture != null
+                                ? MemoryImage(_currentUserProfilePicture!)
+                                : null,
+                          )
+                        : null,
+                    title: Align(
+                        alignment: message.isCurrentUser
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        child: Column(children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8.0, vertical: 4.0),
+                            decoration: BoxDecoration(
+                              color: message.isCurrentUser
+                                  ? Colors.blue[100]
+                                  : Colors.green[100],
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    message.text,
+                                    style: const TextStyle(color: Colors.black),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Align(
+                                    alignment: Alignment.bottomRight,
+                                    child: Column(children: [
+                                      Text(
+                                        _formatTimestamp(message.timestamp),
+                                        style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 12),
+                                      ),
+                                    ])),
+                              ],
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          Align(
-                            alignment: Alignment.bottomRight,
-                            child: Text(
-                               _formatTimestamp(message.timestamp),
-                              style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                            ),
-                          )
-                        ],
-                      ),
-                    )
-                  )
-                );
-              }
-            ),
+                          // Sent and Seen area
+                          if (index == _messages.length - 1 &&
+                              message.isCurrentUser)
+                            Text(
+                              _isSeen || message.seen ? 'Seen' : 'Sent',
+                              style: TextStyle(
+                                  color: Colors.grey[600], fontSize: 12),
+                            )
+                        ])),
+                  );
+                }),
           ),
-        // Input area 
-        Container(
+          // Input area
+          Container(
             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
             decoration: BoxDecoration(
               color: Theme.of(context).cardColor,
@@ -231,7 +261,7 @@ class MessagePageState extends State<MessagePage> {
       ),
     );
   }
-  
+
   String _formatTimestamp(DateTime timestamp) {
     return "${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}";
   }
