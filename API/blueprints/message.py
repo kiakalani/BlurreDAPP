@@ -51,8 +51,11 @@ def get_message_recepients():
             matches[i]['name'] = user.name
             matches[i]['new_messages'] = len(MessageTable.query.filter(
                 and_(
-                    MessageTable.sender == i,
-                    MessageTable.receiver == current_user.id
+                    and_(
+                        MessageTable.sender == i,
+                        MessageTable.receiver == current_user.id
+                    ),
+                    MessageTable.read == False
                 )
             ).all())
             matches[i]['picture'] = prof.get_recepient_images(
