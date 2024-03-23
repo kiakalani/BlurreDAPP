@@ -97,7 +97,7 @@ class Message(abstracts.BP):
             dest = data.get('dest')
             # Making sure dest is valid
             if dest and isinstance(dest, str) and dest.isdigit():
-                user = auth.User.query.filter(auth.User.id == dest).first()
+                user = auth.User.query.filter(auth.User.id == int(dest)).first()
                 # Making sure user is valid
                 if user:
                     # Getting all the unread messages
@@ -114,6 +114,7 @@ class Message(abstracts.BP):
                     for m in msgs:
                         m.read = True
                     Message.db()['session'].commit()
+                    sock.emit('seen_last', {}, room=Message.sock_sids()[user.id])
             
                     
 
