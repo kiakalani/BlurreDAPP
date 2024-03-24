@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:ui/auth.dart';
@@ -111,10 +109,9 @@ class MessagePageState extends State<MessagePage> {
     SocketIO().on(
         'seen_last',
         (p0) => {
-              if (p0['user'] != null && p0['user'].toString() == widget.otherUserId) {
-                _isSeen = true,
-                setState(() => _isSeen = true)
-              }
+              if (p0['user'] != null &&
+                  p0['user'].toString() == widget.otherUserId)
+                {_isSeen = true, setState(() => _isSeen = true)}
             });
   }
 
@@ -157,74 +154,87 @@ class MessagePageState extends State<MessagePage> {
                 itemCount: _messages.length,
                 itemBuilder: (BuildContext context, int index) {
                   final message = _messages[index];
-                  return ListTile(
-                    // display profile picture of the other user
-                    leading: message.isCurrentUser
-                        ? null
-                        : CircleAvatar(
-                            backgroundImage: widget.otherUserProfilePicture !=
-                                    null
-                                ? MemoryImage(widget.otherUserProfilePicture!)
-                                : null,
-                          ),
-                    // display profile picture of the current user
-                    trailing: message.isCurrentUser
-                        ? CircleAvatar(
-                            backgroundImage: _currentUserProfilePicture != null
-                                ? MemoryImage(_currentUserProfilePicture!)
-                                : null,
-                          )
-                        : null,
-                    title: Align(
-                        alignment: message.isCurrentUser
-                            ? Alignment.centerRight
-                            : Alignment.centerLeft,
-                        child: Column(children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8.0, vertical: 4.0),
-                            decoration: BoxDecoration(
-                              color: message.isCurrentUser
-                                  ? Colors.blue[100]
-                                  : Colors.green[100],
-                              borderRadius: BorderRadius.circular(12.0),
+                  return Column(
+                    children: [
+                      ListTile(
+                        // display profile picture of the other user
+                        leading: message.isCurrentUser
+                            ? null
+                            : CircleAvatar(
+                                backgroundImage: widget.otherUserProfilePicture !=
+                                        null
+                                    ? MemoryImage(widget.otherUserProfilePicture!)
+                                    : null,
+                              ),
+                        // display profile picture of the current user
+                        trailing: message.isCurrentUser
+                            ? CircleAvatar(
+                                backgroundImage: _currentUserProfilePicture != null
+                                    ? MemoryImage(_currentUserProfilePicture!)
+                                    : null,
+                              )
+                            : null,
+                        title: Align(
+                            alignment: message.isCurrentUser
+                                ? Alignment.centerRight
+                                : Alignment.centerLeft,
+                            child:
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8.0, vertical: 4.0),
+                                decoration: BoxDecoration(
+                                  color: message.isCurrentUser
+                                      ? Colors.blue[100]
+                                      : Colors.green[100],
+                                  borderRadius: BorderRadius.circular(12.0),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        message.text,
+                                        style: const TextStyle(color: Colors.black),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Align(
+                                        alignment: Alignment.bottomRight,
+                                        child: Column(children: [
+                                          Text(
+                                            _formatTimestamp(message.timestamp),
+                                            style: TextStyle(
+                                                color: Colors.grey[600],
+                                                fontSize: 12),
+                                          ),
+                                        ]
+                                      )
+                                    ),                      
+                                  ],
+                                ),
+                              ),
                             ),
+                        ),
+                        // Sent and Seen area
+                        if (index == _messages.length - 1 && message.isCurrentUser) 
+                          Padding(
+                            padding: const EdgeInsets.only(right: 30.0),
                             child: Row(
-                              mainAxisSize: MainAxisSize.min,
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                Flexible(
-                                  child: Text(
-                                    message.text,
-                                    style: const TextStyle(color: Colors.black),
-                                  ),
+                                Text(
+                                  _isSeen || message.seen ? 'Seen' : 'Sent',
+                                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
                                 ),
-                                const SizedBox(width: 4),
-                                Align(
-                                    alignment: Alignment.bottomRight,
-                                    child: Column(children: [
-                                      Text(
-                                        _formatTimestamp(message.timestamp),
-                                        style: TextStyle(
-                                            color: Colors.grey[600],
-                                            fontSize: 12),
-                                      ),
-                                    ])),
                               ],
                             ),
                           ),
-                          // Sent and Seen area
-                          if (index == _messages.length - 1 &&
-                              message.isCurrentUser)
-                            Text(
-                              _isSeen || message.seen ? 'Seen' : 'Sent',
-                              style: TextStyle(
-                                  color: Colors.grey[600], fontSize: 12),
-                            )
-                        ])),
+                      ],
                   );
-                }),
+                 }),
           ),
+          const SizedBox(width: 4),
           // Input area
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
