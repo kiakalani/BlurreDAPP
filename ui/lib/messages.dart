@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:ui/auth.dart';
 import 'message.dart';
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import 'package:ui/main.dart';
 
 class MessagesPage extends StatefulWidget {
   const MessagesPage({Key? key}) : super(key: key);
@@ -38,6 +38,12 @@ class MessagesPageState extends State<MessagesPage> {
 
   @override
   Widget build(BuildContext context) {
+    Authorization().isLoggedIn().then((logged_in) => {
+      if (!logged_in) {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) => const HomePage()))
+        }
+    });
     final usersList = usersData.entries.map((entry) {
       return {
         'userId': entry.key,
