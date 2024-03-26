@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as developer;
 import 'package:ui/auth.dart';
 import 'package:ui/main.dart';
+import 'package:image_picker/image_picker.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -36,6 +38,9 @@ class SignupPageState extends State<SignupPage> {
   final _passwordController = TextEditingController();
   final _repeatPasswordController = TextEditingController();
 
+  Uint8List? _imageBytes;
+  final ImagePicker _picker = ImagePicker();
+
   // Date selection variables
   bool isDateSelected = false; 
   DateTime birthDate = DateTime.now(); 
@@ -47,6 +52,19 @@ class SignupPageState extends State<SignupPage> {
 
   // Password validation
   bool _isPasswordValid = true;
+
+  bool _displayErrorMessage = false;
+
+  // pick image from gallery
+  Future<void> _pickImage() async {
+    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      final Uint8List imageBytes = await pickedFile.readAsBytes();
+      setState(() {
+        _imageBytes = imageBytes; 
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,6 +86,20 @@ class SignupPageState extends State<SignupPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // Upload photo field
+              if (_imageBytes != null) 
+                SizedBox(
+                  width: 100,
+                  height: 100,
+                  child: Image.memory(_imageBytes!),
+                ),
+                const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: _pickImage,
+                child: const Text('Upload Photo'),
+              ),
+              const SizedBox(height: 20),
+                
               // Name field 
               SizedBox(
                 width: fieldWidth, // Control the width here
@@ -199,9 +231,21 @@ class SignupPageState extends State<SignupPage> {
               ),
               const SizedBox(height: 20),
 
+              // Error message display
+              if (_displayErrorMessage) 
+                const Padding(
+                  padding: EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    'You must upload your profile picture to register.',
+                    style: TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
+              const SizedBox(height: 20),
+
               ElevatedButton(
                 onPressed: () {
                   Authorization().postRequest("/auth/signup/", {
+                    //"picture1": _imageBytes != null ? base64.encode(_imageBytes!) : null,
                     "email": _emailController.text,
                     "name": _nameController.text,
                     "birthday": birthDateString,
@@ -213,6 +257,11 @@ class SignupPageState extends State<SignupPage> {
                             Navigator.of(context).push(MaterialPageRoute(
                                 builder: (context) => const HomePage()))
                           }
+                        else {
+                          setState(() {
+                            _displayErrorMessage = true;
+                          })                        
+                        }
                       });
 
                   developer.log(
