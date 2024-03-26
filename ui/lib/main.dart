@@ -6,6 +6,7 @@ import 'package:ui/profile_setting.dart';
 import 'swipe.dart';
 import 'login.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:ui/sock.dart';
 
 Future<String> readBase64Image(String assetPath) async {
   return await rootBundle.loadString(assetPath);
@@ -25,7 +26,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'BlurreDAPP',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
             seedColor: const Color.fromARGB(255, 244, 53, 158)),
@@ -44,9 +45,15 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  bool _isLoggedIn = false;
   
   @override
   Widget build(BuildContext context) {
+    Authorization().isLoggedIn().then((logged_in) => {
+      if (logged_in) {
+        _isLoggedIn = true
+      }
+    });
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
@@ -65,9 +72,26 @@ class _HomePageState extends State<HomePage> {
                 style: TextStyle(color: Colors.black)),
           ),
           TextButton(
-            onPressed: () => Navigator.push(
-                context, MaterialPageRoute(builder: (_) => const LoginPage())),
-            child: const Text('Log In', style: TextStyle(color: Colors.black)),
+            onPressed: () {
+              // Log out users
+              if(_isLoggedIn) {
+                Authorization().postRequest("/auth/signout/",{} 
+                  ).then((value) => {
+                    if (value.statusCode == 200) {
+                      SocketIO('http://localhost:3001'),
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => const HomePage()))
+                    }
+                  });
+              } else {
+                Navigator.push(
+                  context, MaterialPageRoute(builder: (_) => const LoginPage()));
+              }
+            },
+            child: Text(
+              _isLoggedIn ? 'Log Out' : 'Log In',
+              style: const TextStyle(color: Colors.black)
+            )
           ),
         ],
       ),

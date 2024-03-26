@@ -18,6 +18,7 @@ class SwipePageState extends State<SwipePage> {
   int? _age;
   List<int>? _userIds;
   int? _currentUserId;
+  bool _isLoggedIn = false;
 
   @override
   void initState() {
@@ -92,9 +93,25 @@ class SwipePageState extends State<SwipePage> {
 
   @override
   Widget build(BuildContext context) {
+    Authorization().isLoggedIn().then((logged_in) => {
+      if (logged_in) {
+        _isLoggedIn = true
+      } else {
+        _isLoggedIn = false
+      }
+    });
     return Scaffold(
-      body: _profilePicture == null 
-      ? const Center(child: CircularProgressIndicator())
+      body: !_isLoggedIn || _profilePicture == null
+      ? Container(
+        width: double.infinity,
+        height: double.infinity, 
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage("assets/images/ads.jpg"), 
+            fit: BoxFit.cover
+          ),
+        ),
+      )
       : Card(
           elevation: 4,
           child: Column(
