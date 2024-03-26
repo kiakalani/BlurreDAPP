@@ -52,6 +52,11 @@ class ProfilePreference(current_app.config['DB']['server']):
 
     def __init__(self, email):
         self.email = email
+        # default values
+        self.gender = 'Everyone'
+        self.orientation = 'Everyone'
+        self.age = 25
+        self.distance = 60
 
 
 def resize_picture(txt: str) -> bytes:
@@ -278,7 +283,7 @@ class ProfileBP(abstracts.BP):
                 'Everyone'
             ] else None,
             'age': lambda a: int(a) if (
-                a.isdigit() and a > 18 and a < 99
+                a.isdigit() and a >= 18 and a < 99
             ) else None,
             'distance': lambda d: int(d) if (
                 d.isdigit() and d > 1 and d < 80

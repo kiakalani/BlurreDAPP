@@ -5,6 +5,7 @@ from sqlalchemy import Column, Integer, String, and_, or_, text
 import blueprints.auth as auth
 import blueprints.matches as matches
 import blueprints.abstracts as abstracts
+import blueprints.profile_imp as profile_imp
 
 class SwipeTable(current_app.config['DB']['base']):
     """
@@ -28,7 +29,25 @@ class SwipeBP(abstracts.BP):
     """
     def __init__(self) -> None:
         super().__init__('swipe')
-
+    @staticmethod
+    def create_filter_query() -> str:
+        preferences: profile_imp.ProfilePreference = profile_imp.ProfilePreference.query.filter(
+            profile_imp.ProfilePreference.email == current_user.email
+        ).first()
+        statement = f'SELECT u.id FROM user u WHERE u.id <> :uid AND NOT EXISTS (' +\
+            'SELECT * FROM swipe WHERE (' +\
+                '(user=:uid AND swiped=u.id)' +\
+            ')' +\
+        ')'
+        statement += f' AND user.age >= {preferences.age}'
+        if preferences.orientation != 'Everyone':
+            statement += f' AND user.orientation = {preferences.orientation}'
+        if preferences.gender != 'Everyone':
+            statement += f' AND user.gender = {preferences.gender}'
+        # Todo: Handle the distance.
+        statement += ';'
+        return statement
+        
     @staticmethod
     def bp_get():
         """
@@ -43,11 +62,7 @@ class SwipeBP(abstracts.BP):
             })), 400
         ids = SwipeBP.db()['session'].execute(
             text(
-                'SELECT u.id FROM user u WHERE u.id <> :uid AND NOT EXISTS ('
-                    'SELECT * FROM swipe WHERE ('
-                        '(user=:uid AND swiped=u.id)'
-                    ')'
-                ');'
+                SwipeBP.create_filter_query()
             ),
             {'uid': current_user.id}
         ).all()
