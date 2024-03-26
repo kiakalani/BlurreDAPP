@@ -149,6 +149,7 @@ class Authorization(abstracts.BP):
         birthday = json_req.get('birthday')
         passwd = json_req.get('password')
         retype_passwd = json_req.get('repeat_password')
+        picture1 = json_req.get('picture1')
         
         # Validating the provided parameters exist
         if not email or not passwd or not name or not birthday or not retype_passwd:
@@ -187,6 +188,16 @@ class Authorization(abstracts.BP):
                 })
             ), 400
         
+        # Validating first picture. This would be required for
+        # registration
+        picture1 = profile_imp.resize_picture(picture1)
+        if not picture1:
+            return Authorization.create_response(
+                jsonify({
+                    'message': 'Invalid image provided'
+                })
+            ), 400
+        
         
         
 
@@ -203,6 +214,7 @@ class Authorization(abstracts.BP):
 
         new_usr = User(email, name, birthday, generate_password_hash(passwd))
         new_profile = profile_imp.Profile(email)
+        new_profile.picture1 = picture1
         new_preference = profile_imp.ProfilePreference(email)
         new_location = profile_imp.UserLocation(email)
 
