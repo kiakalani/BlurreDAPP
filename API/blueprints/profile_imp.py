@@ -1,11 +1,12 @@
 import base64
 import io
+import math
 
 from PIL import Image, ImageFilter
 from flask import current_app, request, jsonify
 from flask_login import current_user
 from sqlalchemy import Column, String, Integer, VARBINARY,\
-    and_, or_
+    and_, or_, Float
 
 import blueprints.abstracts as abstracts
 import blueprints.auth as auth
@@ -36,6 +37,37 @@ class Profile(current_app.config['DB']['base']):
 
     def __init__(self, email) -> None:
         self.email = email
+
+class ProfilePreference(current_app.config['DB']['base']):
+    """
+    Each user's preference for partners will be tracked
+    by this table.
+    """
+
+    __tablename__ = 'profile_preference'
+    email = Column(String, primary_key=True)
+    gender = Column(String)
+    orientation = Column(String)
+    age = Column(Integer)
+    distance = Column(Integer)
+
+    def __init__(self, email):
+        self.email = email
+        # default values
+        self.gender = 'Everyone'
+        self.orientation = 'Everyone'
+        self.age = 25
+        self.distance = 60
+
+class UserLocation(current_app.config['DB']['base']):
+    __tablename__ = 'user_location'
+    email = Column(String, primary_key=True)
+    latitude = Column(Float)
+    longitude = Column(Float)
+
+    def __init__(self, email):
+        self.email = email
+
 
 def resize_picture(txt: str) -> bytes:
     """
@@ -183,6 +215,7 @@ class ProfileBP(abstracts.BP):
                 'message': 'Successfully updated the profile'
             })
         ), 200
+
     @staticmethod
     def bp_post_details():
         # Error checking to make sure the request is valid
@@ -218,6 +251,90 @@ class ProfileBP(abstracts.BP):
             'profile': ret_dict
         })), 200
 
+    @staticmethod
+    def bp_get_preference():
+        """
+        Get method for current user's preferences.
+        """
+
+        if current_user.is_anonymous:
+            return ProfileBP.create_response(jsonify({
+                'message': 'Unauthorized'
+            })), 400
+        
+        ret_preference: ProfilePreference = ProfilePreference.query.filter(
+            ProfilePreference.email == current_user.email
+        ).first()
+        
+        ret_dict = {
+            c.name: getattr(ret_preference, c.name) \
+            for c in ProfilePreference.__table__.columns
+        }
+
+        return jsonify({
+            'message': 'success',
+            'preferences': ret_dict
+        }), 200
+
+    @staticmethod
+    def preference_valid_checks():
+        """
+        Provides the functions for validating items.
+        :return: the functions for validating items.
+        """
+
+        return {
+            'gender': lambda g : g if  g in [
+                'Male', 'Female', 'Other', 'Everyone'
+            ] else None,
+            'orientation': lambda o: o if o in [
+                'Straight', 'Gay', 'Lesbian',
+                'Bisexual', 'Asexual', 'Other',
+                'Everyone'
+            ] else None,
+            'age': lambda a: int(a) if (
+                a.isdigit() and a >= 18 and a < 99
+            ) else None,
+            'distance': lambda d: int(d) if (
+                d.isdigit() and d > 1 and d < 80
+            ) else None
+        }
+
+    @staticmethod
+    def bp_post_preference():
+        """
+        Post request for preferences.
+        """
+
+        # error checking
+        if current_user.is_anonymous:
+            return ProfileBP.create_response(jsonify({
+                'message': 'Unauthorized'
+            })), 400
+        
+        # getting profile instance
+        preference = ProfilePreference.query.filter(
+            ProfilePreference.email == current_user.email
+        ).first()
+
+        # getting the json body
+        json_items = request.get_json()
+
+        for key, value in ProfileBP.preference_valid_checks().items():
+            valid = json_items.get(key)
+            if valid:
+                valid = valid(value)
+                # setting the attribute if valid
+                if valid:
+                    setattr(preference, key, valid)
+
+        ProfileBP.db()['session'].commit()
+
+        return ProfileBP.create_response(jsonify({
+            'message': 'success'    
+        })), 200
+
+
 
 def get_blur_level(user: int, user2: int=None) -> int:
     """
@@ -250,6 +367,23 @@ def get_blur_level(user: int, user2: int=None) -> int:
     )
     return max(0, 20 - num_messages)
 
+def calculate_distance(first_pt: dict, second_pt: dict) -> float:
+    """
+    Provides the distance between two points given their latitude
+    and longitude.
+    :param: first_pt: The source point for calculating the length
+    :param: second_pt: The destination point for calculating the length
+    :return: The distance between the two points in killometers.
+    """
+    for i in ('latitude', 'longitude'):
+        if not first_pt.get(i) or not second_pt.get(i):
+            return -1
+    return math.acos(
+        math.sin(math.radians(first_pt['latitude'])) * math.sin(math.radians(second_pt['latitude'])) +
+        math.cos(math.radians(first_pt['latitude'])) * math.cos(math.radians(second_pt['latitude'])) *
+        math.cos(math.radians(second_pt['longitude'] - first_pt['longitude']))
+    ) * 6371
+    
 def get_image(user, user2, pic_name: str = 'picture1', profile=None) -> str:
     """
     Getter for the image given by the pic name.

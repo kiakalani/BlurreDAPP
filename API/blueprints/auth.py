@@ -203,8 +203,13 @@ class Authorization(abstracts.BP):
 
         new_usr = User(email, name, birthday, generate_password_hash(passwd))
         new_profile = profile_imp.Profile(email)
+        new_preference = profile_imp.ProfilePreference(email)
+        new_location = profile_imp.UserLocation(email)
+
         Authorization.db()['session'].add(new_usr)
         Authorization.db()['session'].add(new_profile)
+        Authorization.db()['session'].add(new_preference)
+        Authorization.db()['session'].add(new_location)
         Authorization.db()['session'].commit()
 
         return Authorization.create_response(
