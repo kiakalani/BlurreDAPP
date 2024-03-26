@@ -1,11 +1,12 @@
 import base64
 import io
+import math
 
 from PIL import Image, ImageFilter
 from flask import current_app, request, jsonify
 from flask_login import current_user
 from sqlalchemy import Column, String, Integer, VARBINARY,\
-    and_, or_
+    and_, or_, Float
 
 import blueprints.abstracts as abstracts
 import blueprints.auth as auth
@@ -37,7 +38,7 @@ class Profile(current_app.config['DB']['base']):
     def __init__(self, email) -> None:
         self.email = email
 
-class ProfilePreference(current_app.config['DB']['server']):
+class ProfilePreference(current_app.config['DB']['base']):
     """
     Each user's preference for partners will be tracked
     by this table.
@@ -57,6 +58,15 @@ class ProfilePreference(current_app.config['DB']['server']):
         self.orientation = 'Everyone'
         self.age = 25
         self.distance = 60
+
+class UserLocation(current_app.config['DB']['base']):
+    __tablename__ = 'user_location'
+    email = Column(String, primary_key=True)
+    latitude = Column(Float)
+    longitude = Column(Float)
+
+    def __init__(self, email):
+        self.email = email
 
 
 def resize_picture(txt: str) -> bytes:
@@ -357,6 +367,23 @@ def get_blur_level(user: int, user2: int=None) -> int:
     )
     return max(0, 20 - num_messages)
 
+def calculate_distance(first_pt: dict, second_pt: dict) -> float:
+    """
+    Provides the distance between two points given their latitude
+    and longitude.
+    :param: first_pt: The source point for calculating the length
+    :param: second_pt: The destination point for calculating the length
+    :return: The distance between the two points in killometers.
+    """
+    for i in ('latitude', 'longitude'):
+        if not first_pt.get(i) or not second_pt.get(i):
+            return -1
+    return math.acos(
+        math.sin(math.radians(first_pt['latitude'])) * math.sin(math.radians(second_pt['latitude'])) +
+        math.cos(math.radians(first_pt['latitude'])) * math.cos(math.radians(second_pt['latitude'])) *
+        math.cos(math.radians(second_pt['longitude'] - first_pt['longitude']))
+    ) * 6371
+    
 def get_image(user, user2, pic_name: str = 'picture1', profile=None) -> str:
     """
     Getter for the image given by the pic name.

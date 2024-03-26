@@ -1,3 +1,4 @@
+import math
 from flask import jsonify, current_app, request
 from flask_login import current_user
 from sqlalchemy import Column, Integer, String, and_, or_, text
@@ -44,7 +45,15 @@ class SwipeBP(abstracts.BP):
             statement += f' AND user.orientation = {preferences.orientation}'
         if preferences.gender != 'Everyone':
             statement += f' AND user.gender = {preferences.gender}'
-        # Todo: Handle the distance.
+        user_location: profile_imp.UserLocation = profile_imp.UserLocation.query.filter(
+            profile_imp.UserLocation.email == current_user.email
+        ).first()
+        lat = math.radians(user_location.latitude)
+        long = math.radians(user_location.longitude)
+        statement += f' AND EXISTS('+\
+            'SELECT * from user_location loc WHERE loc.email = u.email AND ' +\
+            f'ACOS(SIN({lat}) * SIN(RADIANS(loc.latitude)) + COS({lat}) * COS(RADIANS(loc.latitude)) * COS(RADIANS(loc.longitude) - {long})) * 6371 <= {preferences.distance}' +\
+        ')'
         statement += ';'
         return statement
         
