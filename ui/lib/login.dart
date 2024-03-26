@@ -97,7 +97,7 @@ class LoginPageState extends State<LoginPage> {
                           {
                             SocketIO('http://localhost:3001'),
                             Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) => const HomePage()))
+                              builder: (context) => const HomePage()))
                           }
                       });
 
