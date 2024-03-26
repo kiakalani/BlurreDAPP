@@ -26,7 +26,7 @@ class Authorization {
         _auth!._adapter.withCredentials = true;
         _auth!._dio.httpClientAdapter = _auth!._adapter;
 
-        // For web, just add a http client adapter   
+        // For web, just add a http client adapter
       }
     }
 
@@ -37,7 +37,10 @@ class Authorization {
   // Post requests
   Future<Response> postRequest(String url, Map<String, dynamic> data) async {
     url = _url + url;
-    return _dio.post(url, data: data);
+    return _dio.post(url,
+        data: data,
+        options: Options(
+            validateStatus: (status) => status != null && status < 500));
   }
 
   // Get requests
@@ -49,8 +52,7 @@ class Authorization {
   Future<bool> isLoggedIn() async {
     var resp = await postRequest("/auth/logged_in/", {});
 
-    if (resp.data['logged_in'] == true)
-    {
+    if (resp.data['logged_in'] == true) {
       SocketIO('http://localhost:3001');
       return true;
     }
