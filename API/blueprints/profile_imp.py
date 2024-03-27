@@ -67,6 +67,8 @@ class UserLocation(current_app.config['DB']['base']):
 
     def __init__(self, email):
         self.email = email
+        self.latitude = 0
+        self.longitude = 0
 
 
 def resize_picture(txt: str) -> bytes:
