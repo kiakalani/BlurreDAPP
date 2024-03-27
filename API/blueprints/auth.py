@@ -7,7 +7,7 @@ from flask import request, jsonify, current_app, make_response
 from werkzeug.security import generate_password_hash,\
     check_password_hash
 
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, DateTime
 import blueprints.abstracts as abstracts
 import blueprints.profile_imp as profile_imp
 
@@ -21,7 +21,7 @@ class User(UserMixin, current_app.config['DB']['base']):
     id = Column(Integer, primary_key=True)
     email = Column(String, unique=True)
     name = Column(String)
-    birthday = Column(String)
+    birthday = Column(DateTime)
     password = Column(String, nullable=False)
 
     def __init__(self, email, name, birthday, password):
@@ -212,7 +212,7 @@ class Authorization(abstracts.BP):
                 })
             ), 400
 
-        new_usr = User(email, name, birthday, generate_password_hash(passwd))
+        new_usr = User(email, name, bday_dt, generate_password_hash(passwd))
         new_profile = profile_imp.Profile(email)
         new_profile.picture1 = picture1
         new_preference = profile_imp.ProfilePreference(email)
