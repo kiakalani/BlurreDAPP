@@ -1,7 +1,7 @@
 import math
 from flask import jsonify, current_app, request
 from flask_login import current_user
-from sqlalchemy import Column, Integer, String, and_, or_, text
+from sqlalchemy import Column, Integer, String, and_, or_, text, exists
 
 import blueprints.auth as auth
 import blueprints.matches as matches
@@ -28,34 +28,61 @@ class SwipeBP(abstracts.BP):
     """
     The blueprint for matching functionality
     """
-    def __init__(self) -> None:
+    def __init__(self) -> list:
         super().__init__('swipe')
     @staticmethod
     def create_filter_query() -> str:
         preferences: profile_imp.ProfilePreference = profile_imp.ProfilePreference.query.filter(
             profile_imp.ProfilePreference.email == current_user.email
         ).first()
-        statement = f'SELECT u.id FROM user u WHERE u.id <> :uid AND NOT EXISTS (' +\
-            'SELECT * FROM swipe WHERE (' +\
-                '(user=:uid AND swiped=u.id)' +\
-            ')' +\
-        ')'
-        statement += f' AND user.age >= {preferences.age}'
-        if preferences.orientation != 'Everyone':
-            statement += f' AND user.orientation = {preferences.orientation}'
-        if preferences.gender != 'Everyone':
-            statement += f' AND user.gender = {preferences.gender}'
-        user_location: profile_imp.UserLocation = profile_imp.UserLocation.query.filter(
-            profile_imp.UserLocation.email == current_user.email
-        ).first()
-        lat = math.radians(user_location.latitude)
-        long = math.radians(user_location.longitude)
-        # statement += f' AND EXISTS('+\
-        #     'SELECT * from user_location loc WHERE loc.email = u.email AND ' +\
-        #     f'ACOS(SIN({lat}) * SIN(RADIANS(loc.latitude)) + COS({lat}) * COS(RADIANS(loc.latitude)) * COS(RADIANS(loc.longitude) - {long})) * 6371 <= {preferences.distance}' +\
+        users = SwipeBP.db()['session'].query(auth.User).filter(
+            and_(
+                auth.User.id != current_user.id,
+                ~exists().where(
+                    and_(
+                        SwipeTable.user == current_user.id,
+                        SwipeTable.swiped == auth.User.id
+                    )
+                )
+            )
+        ).filter(
+            and_(
+                auth.get_age(auth.User.birthday) <= preferences.age,
+                exists().where(
+                    and_(
+                        and_(
+                            profile_imp.Profile.email == auth.User.email,
+                            True if preferences.orientation == 'Everyone' else profile_imp.Profile.orientation == preferences.orientation
+                        ),
+                        True if preferences.gender == 'Everyone' else profile_imp.Profile.gender == preferences.gender 
+                    )
+                )
+            )
+        ).all()
+        return [u.id for u in users]
+        # users = [u.id for u in users]
+        
+        # statement = f'SELECT u.id FROM user u WHERE u.id <> :uid AND NOT EXISTS (' +\
+        #     'SELECT * FROM swipe WHERE (' +\
+        #         '(user=:uid AND swiped=u.id)' +\
+        #     ')' +\
         # ')'
-        statement += ';'
-        return statement
+        # statement += f' AND user.age >= {preferences.age}'
+        # if preferences.orientation != 'Everyone':
+        #     statement += f' AND user.orientation = {preferences.orientation}'
+        # if preferences.gender != 'Everyone':
+        #     statement += f' AND user.gender = {preferences.gender}'
+        # user_location: profile_imp.UserLocation = profile_imp.UserLocation.query.filter(
+        #     profile_imp.UserLocation.email == current_user.email
+        # ).first()
+        # lat = math.radians(user_location.latitude)
+        # long = math.radians(user_location.longitude)
+        # # statement += f' AND EXISTS('+\
+        # #     'SELECT * from user_location loc WHERE loc.email = u.email AND ' +\
+        # #     f'ACOS(SIN({lat}) * SIN(RADIANS(loc.latitude)) + COS({lat}) * COS(RADIANS(loc.latitude)) * COS(RADIANS(loc.longitude) - {long})) * 6371 <= {preferences.distance}' +\
+        # # ')'
+        # statement += ';'
+        # return statement
         
     @staticmethod
     def bp_get():
@@ -69,12 +96,7 @@ class SwipeBP(abstracts.BP):
             return SwipeBP.create_response(jsonify({
                 'message': 'Unauthorized'
             })), 400
-        ids = SwipeBP.db()['session'].execute(
-            text(
-                SwipeBP.create_filter_query()
-            ),
-            {'uid': current_user.id}
-        ).all()
+        ids = SwipeBP.create_filter_query()
         ids = ids[:10]
         ids = [i[0] for i in ids]
         return SwipeBP.create_response(jsonify({
