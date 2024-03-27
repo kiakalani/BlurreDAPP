@@ -53,9 +53,15 @@ class SwipeBP(abstracts.BP):
                     and_(
                         and_(
                             profile_imp.Profile.email == auth.User.email,
-                            True if preferences.orientation == 'Everyone' else profile_imp.Profile.orientation == preferences.orientation
+                            or_(
+                                profile_imp.Profile.orientation == preferences.orientation,
+                                preferences.orientation == 'Everyone'
+                            )
                         ),
-                        True if preferences.gender == 'Everyone' else profile_imp.Profile.gender == preferences.gender 
+                        or_(
+                            profile_imp.Profile.orientation == preferences.orientation,
+                            preferences.orientation == 'Everyone'
+                        )
                     )
                 )
             )
