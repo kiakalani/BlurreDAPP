@@ -1,7 +1,7 @@
 import math
 from flask import jsonify, current_app, request
 from flask_login import current_user
-from sqlalchemy import Column, Integer, String, and_, or_, text, exists
+from sqlalchemy import Column, Integer, String, and_, or_, text, exists, extract
 
 import blueprints.auth as auth
 import blueprints.matches as matches
@@ -47,7 +47,7 @@ class SwipeBP(abstracts.BP):
             )
         ).filter(
             and_(
-                auth.get_age(auth.User.birthday) <= preferences.age,
+                auth.get_age(extract(auth.User.birthday)) <= preferences.age,
                 exists().where(
                     and_(
                         and_(
