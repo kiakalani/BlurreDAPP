@@ -152,7 +152,9 @@ class MessagePageState extends State<MessagePage> {
           IconButton(
             icon: const Icon(Icons.cancel),
             onPressed: () {
-              Authorization().postRequest('/message/unmatch/', {}).then((resp) => {
+              Authorization().postRequest('/match/unmatch/', {
+                'unmatched': widget.otherUserId
+              }).then((resp) => {
                 if (resp.statusCode == 200)
                   {
                     Navigator.of(context).push(MaterialPageRoute(

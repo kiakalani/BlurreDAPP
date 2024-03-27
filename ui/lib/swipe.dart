@@ -71,16 +71,13 @@ class SwipePageState extends State<SwipePage> {
       "user_id": _currentUserId.toString()
     }).then((value) {
       final responseBody = json.decode(value.toString()); 
-      if (responseBody['profile'] != null && 
-          responseBody['profile']['name'] != null &&
-          responseBody['profile']['age'] != null &&
-          responseBody['profile']['picture1'] != null &&
-          responseBody['profile']['bio'] != null 
-          ) {
-        final String base64Image = responseBody['profile']['picture1'];
-        final String bio = responseBody['profile']['bio'];
-        final String name = responseBody['profile']['name'];
-        final int age = responseBody['profile']['age'];
+      print(responseBody);
+      if (responseBody['profile'] != null)
+      {
+        final String base64Image = responseBody['profile']['picture1'] ?? '';
+        final String bio = responseBody['profile']['bio'] ?? '';
+        final String name = responseBody['profile']['name'] ?? '';
+        final int? age = responseBody['profile']['age'];
         setState(() {
           _profilePicture = base64Decode(base64Image);
           _bio = bio;

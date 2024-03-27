@@ -26,7 +26,6 @@ class MessagesPageState extends State<MessagesPage> {
     Authorization().postRequest("/message/", {}).then((value) {
       if (value.statusCode == 200) {
         final responseBody = json.decode(value.toString()); 
-        print(value);
          setState(() {
           if (responseBody['info'] != null) {
             usersData = Map<String, dynamic>.from(responseBody['info']);
