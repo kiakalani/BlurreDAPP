@@ -3,8 +3,9 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:ui/auth.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
-
+import 'package:ui/profile_details.dart';
 import 'package:ui/sock.dart';
+import 'package:ui/messages.dart';
 
 class MessagePage extends StatefulWidget {
   final String otherUserName;
@@ -146,6 +147,21 @@ class MessagePageState extends State<MessagePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.otherUserName),
+        // once unmatch the user, redirect to message page
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.cancel),
+            onPressed: () {
+              Authorization().postRequest('/message/unmatch/', {}).then((resp) => {
+                if (resp.statusCode == 200)
+                  {
+                    Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => const MessagesPage()))
+                  }
+              });
+            },
+          ),
+        ]
       ),
       body: Column(
         children: [
@@ -160,12 +176,19 @@ class MessagePageState extends State<MessagePage> {
                         // display profile picture of the other user
                         leading: message.isCurrentUser
                             ? null
-                            : CircleAvatar(
-                                backgroundImage: widget.otherUserProfilePicture !=
-                                        null
+                            : GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (context) => ProfileDetailsPage(
+                                    currentUserId: widget.otherUserId.toString(),
+                                  )));
+                              },
+                              child: CircleAvatar(
+                                backgroundImage: widget.otherUserProfilePicture != null
                                     ? MemoryImage(widget.otherUserProfilePicture!)
                                     : null,
                               ),
+                            ), 
                         // display profile picture of the current user
                         trailing: message.isCurrentUser
                             ? CircleAvatar(

@@ -245,7 +245,7 @@ class SignupPageState extends State<SignupPage> {
               ElevatedButton(
                 onPressed: () {
                   Authorization().postRequest("/auth/signup/", {
-                    //"picture1": _imageBytes != null ? base64.encode(_imageBytes!) : null,
+                    "picture1": _imageBytes != null ? base64.encode(_imageBytes!) : null,
                     "email": _emailController.text,
                     "name": _nameController.text,
                     "birthday": birthDateString,
