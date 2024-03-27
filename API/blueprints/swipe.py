@@ -50,10 +50,10 @@ class SwipeBP(abstracts.BP):
         ).first()
         lat = math.radians(user_location.latitude)
         long = math.radians(user_location.longitude)
-        statement += f' AND EXISTS('+\
-            'SELECT * from user_location loc WHERE loc.email = u.email AND ' +\
-            f'ACOS(SIN({lat}) * SIN(RADIANS(loc.latitude)) + COS({lat}) * COS(RADIANS(loc.latitude)) * COS(RADIANS(loc.longitude) - {long})) * 6371 <= {preferences.distance}' +\
-        ')'
+        # statement += f' AND EXISTS('+\
+        #     'SELECT * from user_location loc WHERE loc.email = u.email AND ' +\
+        #     f'ACOS(SIN({lat}) * SIN(RADIANS(loc.latitude)) + COS({lat}) * COS(RADIANS(loc.latitude)) * COS(RADIANS(loc.longitude) - {long})) * 6371 <= {preferences.distance}' +\
+        # ')'
         statement += ';'
         return statement
         

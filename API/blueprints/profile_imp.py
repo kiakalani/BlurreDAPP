@@ -140,6 +140,16 @@ def valid_checks() -> dict:
 class ProfileBP(abstracts.BP):
     def __init__(self) -> None:
         super().__init__('profile')
+        ProfileBP.sock().on('update_location')
+        def update_location(coords):
+            if current_user.is_anonymous:
+                return
+            loc = UserLocation.query.filter(
+                UserLocation.email == current_user.email
+            ).first()
+            loc.latitude = coords['latitude']
+            loc.longitude = coords['longitude']
+            ProfileBP.db()['session'].commit()
 
     @staticmethod
     def bp_get():
