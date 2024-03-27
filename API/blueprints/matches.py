@@ -4,6 +4,7 @@ from sqlalchemy import Integer, String, Column, and_, or_, text
 
 import blueprints.abstracts as abstracts
 import blueprints.auth as auth
+import blueprints.message as message
 
 
 class MatchTable(current_app.config['DB']['base']):
@@ -107,6 +108,23 @@ class MatchBP(abstracts.BP):
             return MatchBP.create_response(jsonify({
                 'message': 'Bad request'
             })), 400
+        
+        # Deleting all the messages between two users
+        message_hist = message.MessageTable.query.filter(
+            or_(
+                and_(
+                    message.MessageTable.sender == current_user.id,
+                    message.MessageTable.receiver == unmatched
+                ),
+                and_(
+                    message.MessageTable.sender == unmatched,
+                    message.MessageTable.receiver == current_user.id
+                )
+            )
+        ).all()
+
+        for m in message_hist:
+            MatchBP.db()['session'].delete(m)
         
         # deleting the match instance
         MatchBP.db()['session'].delete(match_inst)
