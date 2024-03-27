@@ -105,6 +105,7 @@ class SwipeBP(abstracts.BP):
             })), 400
         ids = SwipeBP.create_filter_query()
         ids = ids[:10]
+        print(ids, 'is the id')
         return SwipeBP.create_response(jsonify({
             'message': 'Success',
             'ids': ids
