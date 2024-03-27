@@ -46,6 +46,7 @@ class MatchBP(abstracts.BP):
     def __init__(self) -> None:
         super().__init__('match')
     
+    @staticmethod
     def bp_get():
         """
         A method that provides the id of all users that
@@ -64,6 +65,7 @@ class MatchBP(abstracts.BP):
             'response': users
         }))
 
+    @staticmethod
     def bp_post_unmatch():
         """
         A method to unmatch a user.
