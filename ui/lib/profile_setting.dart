@@ -48,23 +48,26 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
             final String picture2 = responseBody['profile']['picture2'] ?? '';
             final String picture3 = responseBody['profile']['picture3'] ?? '';
             final String picture4 = responseBody['profile']['picture4'] ?? '';
-            final String bio = responseBody['profile']['bio'] ?? '';
-            final int height = responseBody['profile']['height'] ?? '';
-            final String gender = responseBody['profile']['gender'] ?? '';
-            final String sexOrientation = responseBody['profile']['orientation'] ?? '';
-            final String lookingFor = responseBody['profile']['looking_for'] ?? '';
-            final String exercise = responseBody['profile']['exercise'] ?? '';
-            final String starSign = responseBody['profile']['star_sign'] ?? '';
-            final String drinking = responseBody['profile']['drinking'] ?? '';
-            final String smoking = responseBody['profile']['smoking'] ?? '';
-            final String religion = responseBody['profile']['religion'] ?? '';
+            final String? bio = responseBody['profile']['bio'];
+            String height = '';
+            if (responseBody['profile']['height'] != null) {
+              height = responseBody['profile']['height'].toString();
+            }
+            final String? gender = responseBody['profile']['gender'];
+            final String? sexOrientation = responseBody['profile']['orientation'];
+            final String? lookingFor = responseBody['profile']['looking_for'];
+            final String? exercise = responseBody['profile']['exercise'];
+            final String? starSign = responseBody['profile']['star_sign'];
+            final String? drinking = responseBody['profile']['drinking'];
+            final String? smoking = responseBody['profile']['smoking'];
+            final String? religion = responseBody['profile']['religion'];
             setState(() {
               _imageBytesList[0] = picture1 == '' ? null : base64Decode(picture1);
               _imageBytesList[1] = picture2 == '' ? null : base64Decode(picture2);
               _imageBytesList[2] = picture3 == '' ? null : base64Decode(picture3);
               _imageBytesList[3] = picture4 == '' ? null : base64Decode(picture4);
-              _bioController.text = bio;
-              _heightController.text = height.toString();
+              _bioController.text = bio!;
+              _heightController.text = height;
               _gender = gender;
               _sexOrientation = sexOrientation;
               _lookingFor = lookingFor;
@@ -154,8 +157,8 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
         
                               ),
                               child: _imageBytesList[index] == null
-                                  ? const Icon(Icons.add, color: Colors.white)
-                                  : null,
+                                ? const Icon(Icons.add, color: Colors.white)
+                                : null,
                             ),
                           );
                         },
