@@ -32,6 +32,7 @@ class SwipeBP(abstracts.BP):
         super().__init__('swipe')
     @staticmethod
     def create_filter_query() -> str:
+        today = auth.datetime.datetime.today()
         preferences: profile_imp.ProfilePreference = profile_imp.ProfilePreference.query.filter(
             profile_imp.ProfilePreference.email == current_user.email
         ).first()
@@ -47,7 +48,11 @@ class SwipeBP(abstracts.BP):
             )
         ).filter(
             and_(
-                auth.get_age(auth.bday_str_to_datetime(extract('month', auth.User.birthday) + '-' + extract('day', auth.User.birthday) + extract('year', auth.User.birthday))) <= preferences.age,
+                today.year - extract('year', auth.User.birthday) - (
+                    1 if (
+                        (today.month, today.day) < (extract('month', auth.User.birthday), extract('day', auth.User.birthday))
+                    ) else 0
+                ) <= preferences.age,
                 exists().where(
                     and_(
                         and_(
