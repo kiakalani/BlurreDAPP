@@ -257,7 +257,7 @@ class ProfileBP(abstracts.BP):
         for k in images:
             ret_dict[k] = images[k]
         ret_dict['name'] = user.name
-        ret_dict['age'] = auth.get_age(auth.bday_str_to_datetime(user.birthday))
+        ret_dict['age'] = auth.get_age(user.birthday)
         return ProfileBP.create_response(jsonify({
             'message': 'Success',
             'profile': ret_dict
