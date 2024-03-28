@@ -394,7 +394,7 @@ def calculate_distance(first_pt: dict, second_pt: dict) -> float:
     :return: The distance between the two points in killometers.
     """
     for i in ('latitude', 'longitude'):
-        if not first_pt.get(i) or not second_pt.get(i):
+        if first_pt.get(i) is None or second_pt.get(i) is None:
             return -1
     return math.acos(
         math.sin(math.radians(first_pt['latitude'])) * math.sin(math.radians(second_pt['latitude'])) +
