@@ -41,14 +41,13 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
   void _fetchProfileSettings() {
     Authorization().getRequest("/profile/").then((value) {
-      print(value);
       final responseBody = json.decode(value.toString());
       if (responseBody['profile'] != null) {
             final String picture1 = responseBody['profile']['picture1'] ?? '';
             final String picture2 = responseBody['profile']['picture2'] ?? '';
             final String picture3 = responseBody['profile']['picture3'] ?? '';
             final String picture4 = responseBody['profile']['picture4'] ?? '';
-            final String? bio = responseBody['profile']['bio'];
+            final String bio = responseBody['profile']['bio'] ?? '';
             String height = '';
             if (responseBody['profile']['height'] != null) {
               height = responseBody['profile']['height'].toString();
@@ -66,7 +65,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
               _imageBytesList[1] = picture2 == '' ? null : base64Decode(picture2);
               _imageBytesList[2] = picture3 == '' ? null : base64Decode(picture3);
               _imageBytesList[3] = picture4 == '' ? null : base64Decode(picture4);
-              _bioController.text = bio!;
+              _bioController.text = bio;
               _heightController.text = height;
               _gender = gender;
               _sexOrientation = sexOrientation;

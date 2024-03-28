@@ -15,7 +15,7 @@ class ProfileDetailsPage extends StatefulWidget {
 }
 
  class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
-  Uint8List? _profilePicture;
+  final List<Uint8List?> _imageBytesList = List.filled(4, null);
   String? _name;
   int? _age;
   String? _bio;
@@ -41,49 +41,41 @@ class ProfileDetailsPage extends StatefulWidget {
       "user_id": widget.currentUserId
     }).then((value) {
       final responseBody = json.decode(value.toString()); 
-      if (responseBody['profile'] != null && 
-          responseBody['profile']['picture1'] != null &&
-          responseBody['profile']['name'] != null &&
-          responseBody['profile']['age'] != null &&
-          responseBody['profile']['bio'] != null &&
-          responseBody['profile']['height'] != null &&
-          responseBody['profile']['gender'] != null &&
-          responseBody['profile']['orientation'] != null &&
-          responseBody['profile']['looking_for'] != null &&
-          responseBody['profile']['exercise'] != null &&
-          responseBody['profile']['star_sign'] != null &&
-          responseBody['profile']['drinking'] != null &&
-          responseBody['profile']['smoking'] != null &&
-          responseBody['profile']['religion'] != null 
-          ) {
-            final String base64Image = responseBody['profile']['picture1'];
-            final String name = responseBody['profile']['name'];
-            final int age = responseBody['profile']['age'];
-            final String bio = responseBody['profile']['bio'];
-            final int height = responseBody['profile']['height'];
-            final String gender = responseBody['profile']['gender'];
-            final String sexOrientation = responseBody['profile']['orientation'];
-            final String lookingFor = responseBody['profile']['looking_for'];
-            final String exercise = responseBody['profile']['exercise'];
-            final String starSign = responseBody['profile']['star_sign'];
-            final String drinking = responseBody['profile']['drinking'];
-            final String smoking = responseBody['profile']['smoking'];
-            final String religion = responseBody['profile']['religion'];
-            setState(() {
-              _profilePicture = base64Decode(base64Image);
-              _name = name;
-              _age = age;
-              _bio = bio;
-              _height = height;
-              _gender = gender;
-              _sexOrientation = sexOrientation;
-              _lookingFor = lookingFor;
-              _exercise = exercise;
-              _starSign = starSign;
-              _drinking = drinking;
-              _smoking = smoking;
-              _religion = religion;
-            });
+      if (responseBody['profile'] != null) {
+        final String picture1 = responseBody['profile']['picture1'] ?? '';
+        final String picture2 = responseBody['profile']['picture2'] ?? '';
+        final String picture3 = responseBody['profile']['picture3'] ?? '';
+        final String picture4 = responseBody['profile']['picture4'] ?? '';
+        final String? name = responseBody['profile']['name'];
+        final int? age = responseBody['profile']['age'];
+        final String? bio = responseBody['profile']['bio'];
+        final int? height = responseBody['profile']['height'];
+        final String? gender = responseBody['profile']['gender'];
+        final String? sexOrientation = responseBody['profile']['orientation'];
+        final String? lookingFor = responseBody['profile']['looking_for'];
+        final String? exercise = responseBody['profile']['exercise'];
+        final String? starSign = responseBody['profile']['star_sign'];
+        final String? drinking = responseBody['profile']['drinking'];
+        final String? smoking = responseBody['profile']['smoking'];
+        final String? religion = responseBody['profile']['religion'];
+        setState(() {
+          _imageBytesList[0] = picture1 == '' ? null : base64Decode(picture1);
+          _imageBytesList[1] = picture2 == '' ? null : base64Decode(picture2);
+          _imageBytesList[2] = picture3 == '' ? null : base64Decode(picture3);
+          _imageBytesList[3] = picture4 == '' ? null : base64Decode(picture4);
+          _name = name;
+          _age = age;
+          _bio = bio;
+          _height = height;
+          _gender = gender;
+          _sexOrientation = sexOrientation;
+          _lookingFor = lookingFor;
+          _exercise = exercise;
+          _starSign = starSign;
+          _drinking = drinking;
+          _smoking = smoking;
+          _religion = religion;
+        });
       }
     });
   }
@@ -99,13 +91,50 @@ class ProfileDetailsPage extends StatefulWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center, 
           children: <Widget>[
-            if (_profilePicture != null)
+            // Profile picture field
+            /*PageView.builder(
+              itemCount: _imageBytesList.length,
+              itemBuilder: (context, index) {
+                if (_imageBytesList[index] != null) {
+                  return Container(
+                    width: MediaQuery.of(context).size.width * 0.8,
+                    height: MediaQuery.of(context).size.height * 0.4,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: MemoryImage(_imageBytesList[index]!),
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                }
+              })*/
+            // return PageView.builder(
+      /*itemCount: widget.imageBytesList.length, // Number of images
+      itemBuilder: (context, index) {
+        if (widget.imageBytesList[index] != null) {
+          return Container(
+            width: MediaQuery.of(context).size.width * 0.8,
+            height: MediaQuery.of(context).size.height * 0.4,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: MemoryImage(widget.imageBytesList[index]),
+                fit: BoxFit.contain,
+              ),
+            ),
+          )
+            PageView.builder(
+              itemCount: ,
+              itemBuilder: itemBuilder)*/
+            /*GestureDetector(
+
+            )*/
+            if (_imageBytesList[0] != null)
                 Container(
                   width: MediaQuery.of(context).size.width * 0.8, 
                   height: MediaQuery.of(context).size.height * 0.4, 
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: MemoryImage(_profilePicture!),
+                      image: MemoryImage(_imageBytesList[0]!),
                       fit: BoxFit.contain, 
                     ),
                   ),
