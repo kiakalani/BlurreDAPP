@@ -66,8 +66,8 @@ class SwipeBP(abstracts.BP):
                                 )
                             ),
                             or_(
-                                profile_imp.Profile.orientation == preferences.orientation,
-                                preferences.orientation == 'Everyone'
+                                profile_imp.Profile.gender == preferences.gender,
+                                preferences.gender == 'Everyone'
                             )
                         ),
                     ),
