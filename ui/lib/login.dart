@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as developer;
 import 'package:ui/auth.dart';
+import 'package:ui/location.dart';
 import 'package:ui/main.dart';
 import 'package:ui/sock.dart';
 
@@ -96,8 +97,9 @@ class LoginPageState extends State<LoginPage> {
                         if (resp.statusCode == 200)
                           {
                             SocketIO('http://localhost:3001'),
+                            LocationService().update_location(),
                             Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => const HomePage()))
+                                builder: (context) => const HomePage()))
                           }
                       });
 

@@ -15,24 +15,6 @@ Future<String> readBase64Image(String assetPath) async {
 
 void main() {
   Authorization("http://localhost:3001");
-  Authorization().isLoggedIn().then((value) => {
-        developer.log("Logged In is " + value.toString()),
-      });
-  LocationService loc = LocationService();
-  loc.request_permission().then(
-        (value) => {
-          if (value)
-            {
-              loc.get_location().then((value) => {
-                    print('Lat, Long: ' +
-                        value.latitude.toString() +
-                        ', ' +
-                        value.longitude.toString()),
-                    print('Location data is ' + loc.toString())
-                  })
-            }
-        },
-      );
   runApp(const MyApp());
 }
 
