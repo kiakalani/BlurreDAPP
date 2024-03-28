@@ -303,13 +303,13 @@ class ProfileBP(abstracts.BP):
                 'Everyone'
             ] else None,
             'age': lambda a: int(a) if (
-                a.isdigit() and a >= 18 and a < 101
+                isinstance(a, str) and a.isdigit() and a >= 18 and a < 101
             ) else None,
             'min_age': lambda a: int(a) if (
-                a.isdigit() and a >= 18 and a < 101
+                isinstance(a, str) and a.isdigit() and a >= 18 and a < 101
             ) else None,
             'distance': lambda d: int(d) if (
-                d.isdigit() and d > 1 and d < 80
+                isinstance(d, str) and d.isdigit() and d > 1 and d < 80
             ) else None
         }
 
