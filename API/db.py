@@ -2,7 +2,7 @@ import os
 from typing import TypedDict
 
 from flask import Flask, current_app
-from sqlalchemy import create_engine, Engine
+from sqlalchemy import create_engine, Engine, PoolProxiedConnection
 from sqlalchemy.orm import scoped_session, sessionmaker, declarative_base, DeclarativeBase, Session
 
 class DBComps(TypedDict):
@@ -13,6 +13,7 @@ class DBComps(TypedDict):
     engine: Engine
     session: Session
     base: DeclarativeBase
+    raw_connection: PoolProxiedConnection
     destroy: any
 
 def init_db(env_name='SQLDB') -> DBComps:
@@ -36,6 +37,7 @@ def init_db(env_name='SQLDB') -> DBComps:
     
     # Creating the needed variables for the database
     engine = create_engine(f'sqlite:///{path}')
+    raw_connection = engine.raw_connection()
     session = scoped_session(sessionmaker(autoflush=False, bind=engine))
     base = declarative_base()
     base.query = session.query_property()
@@ -44,7 +46,8 @@ def init_db(env_name='SQLDB') -> DBComps:
         'engine': engine,
         'session': session,
         'base': base,
-        'destroy': lambda : session.remove()
+        'destroy': lambda : session.remove(),
+        'raw_connection': raw_connection
     }
 
 

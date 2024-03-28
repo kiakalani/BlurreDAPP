@@ -1,5 +1,5 @@
 import os
-
+import math
 from flask import Flask, request
 from flask_login import current_user
 from flask_cors import CORS
@@ -25,6 +25,15 @@ class FlaskApp:
         with self.__app.app_context():
             self.__load_blueprints()
 
+    def __setup_additional_funcs(self):
+        self.db['raw_connection'].create_function('cos', 1, math.cos)
+        self.db['raw_connection'].create_function('sin', 1, math.sin)
+        self.db['raw_connection'].create_function('acos', 1, math.acos)
+        self.db['raw_connection'].create_function('radians', 1, math.radians)
+
+    
+
+
     def __setup_config(self) -> None:
         """
         Sets up the initial configurations for the app.
@@ -38,6 +47,7 @@ class FlaskApp:
         def rm_sess(exception=None):
             if app.config['DB'].get('destroy'):
                 app.config['DB']['destroy']()
+        self.__setup_additional_funcs()
 
     def __setup_socketio(self) -> None:
         """
