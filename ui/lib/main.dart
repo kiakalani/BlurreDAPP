@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:developer' as developer;
 import 'package:ui/auth.dart';
+import 'package:ui/location.dart';
 import 'package:ui/messages.dart';
 import 'package:ui/profile_setting.dart';
 import 'swipe.dart';
@@ -15,8 +16,23 @@ Future<String> readBase64Image(String assetPath) async {
 void main() {
   Authorization("http://localhost:3001");
   Authorization().isLoggedIn().then((value) => {
-    developer.log("Logged In is " + value.toString()),
-  });
+        developer.log("Logged In is " + value.toString()),
+      });
+  LocationService loc = LocationService();
+  loc.request_permission().then(
+        (value) => {
+          if (value)
+            {
+              loc.get_location().then((value) => {
+                    print('Lat, Long: ' +
+                        value.latitude.toString() +
+                        ', ' +
+                        value.longitude.toString()),
+                    print('Location data is ' + loc.toString())
+                  })
+            }
+        },
+      );
   runApp(const MyApp());
 }
 
@@ -46,14 +62,12 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool _isLoggedIn = false;
-  
+
   @override
   Widget build(BuildContext context) {
     Authorization().isLoggedIn().then((logged_in) => {
-      if (logged_in) {
-        _isLoggedIn = true
-      }
-    });
+          if (logged_in) {_isLoggedIn = true}
+        });
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
@@ -72,27 +86,25 @@ class _HomePageState extends State<HomePage> {
                 style: TextStyle(color: Colors.black)),
           ),
           TextButton(
-            onPressed: () {
-              // Log out users
-              if(_isLoggedIn) {
-                Authorization().postRequest("/auth/signout/",{} 
-                  ).then((value) => {
-                    if (value.statusCode == 200) {
-                      SocketIO('http://localhost:3001'),
-                      Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => const HomePage()))
-                    }
-                  });
-              } else {
-                Navigator.push(
-                  context, MaterialPageRoute(builder: (_) => const LoginPage()));
-              }
-            },
-            child: Text(
-              _isLoggedIn ? 'Log Out' : 'Log In',
-              style: const TextStyle(color: Colors.black)
-            )
-          ),
+              onPressed: () {
+                // Log out users
+                if (_isLoggedIn) {
+                  Authorization()
+                      .postRequest("/auth/signout/", {}).then((value) => {
+                            if (value.statusCode == 200)
+                              {
+                                SocketIO('http://localhost:3001'),
+                                Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (context) => const HomePage()))
+                              }
+                          });
+                } else {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const LoginPage()));
+                }
+              },
+              child: Text(_isLoggedIn ? 'Log Out' : 'Log In',
+                  style: const TextStyle(color: Colors.black))),
         ],
       ),
       body: const Center(child: SwipePage()),
