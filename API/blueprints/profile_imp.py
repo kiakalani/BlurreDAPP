@@ -50,6 +50,7 @@ class ProfilePreference(current_app.config['DB']['base']):
     orientation = Column(String)
     age = Column(Integer)
     distance = Column(Integer)
+    min_age = Column(Integer)
 
     def __init__(self, email):
         self.email = email
@@ -57,6 +58,7 @@ class ProfilePreference(current_app.config['DB']['base']):
         self.gender = 'Everyone'
         self.orientation = 'Everyone'
         self.age = 25
+        self.min_age = 18
         self.distance = 60
 
 class UserLocation(current_app.config['DB']['base']):
@@ -301,7 +303,10 @@ class ProfileBP(abstracts.BP):
                 'Everyone'
             ] else None,
             'age': lambda a: int(a) if (
-                a.isdigit() and a >= 18 and a < 99
+                a.isdigit() and a >= 18 and a < 101
+            ) else None,
+            'min_age': lambda a: int(a) if (
+                a.isdigit() and a >= 18 and a < 101
             ) else None,
             'distance': lambda d: int(d) if (
                 d.isdigit() and d > 1 and d < 80
