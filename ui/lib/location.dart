@@ -3,20 +3,20 @@ import 'package:ui/auth.dart';
 
 class LocationService {
   Location location = Location();
+  static LocationService? _loc;
+
+  LocationService._internal();
+  factory LocationService() {
+    _loc ??= LocationService._internal();
+    return _loc!;
+  }
+
   Future<bool> request_permission() async {
     return (await location.requestPermission()) == PermissionStatus.granted;
   }
 
   Future<LocationData> get_location() async {
     return await location.getLocation();
-  }
-
-  static LocationService? _loc;
-
-  LocationService._internal();
-  factory LocationService() {
-    _loc ??= LocationService();
-    return _loc!;
   }
 
   void update_location() {
