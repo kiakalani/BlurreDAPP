@@ -140,16 +140,6 @@ def valid_checks() -> dict:
 class ProfileBP(abstracts.BP):
     def __init__(self) -> None:
         super().__init__('profile')
-        ProfileBP.sock().on('update_location')
-        def update_location(coords):
-            if current_user.is_anonymous:
-                return
-            loc = UserLocation.query.filter(
-                UserLocation.email == current_user.email
-            ).first()
-            loc.latitude = coords['latitude']
-            loc.longitude = coords['longitude']
-            ProfileBP.db()['session'].commit()
 
     @staticmethod
     def bp_get():
@@ -260,10 +250,10 @@ class ProfileBP(abstracts.BP):
         ret_dict['age'] = auth.get_age(user.birthday)
         first_loc: UserLocation = UserLocation.query.filter(UserLocation.email == current_user.email).first()
         second_loc: UserLocation = UserLocation.query.filter(UserLocation.email == user.email).first()
-        ret_dict['distance'] = calculate_distance(
+        ret_dict['distance'] = int(calculate_distance(
             {'latitude':first_loc.latitude, 'longitude': first_loc.longitude},
             {'latitude':second_loc.latitude, 'longitude': second_loc.longitude}
-        )
+        ))
         return ProfileBP.create_response(jsonify({
             'message': 'Success',
             'profile': ret_dict
@@ -351,6 +341,49 @@ class ProfileBP(abstracts.BP):
         return ProfileBP.create_response(jsonify({
             'message': 'success'    
         })), 200
+    @staticmethod
+    def bp_get_location():
+        if current_user.is_anonymous:
+            return ProfileBP.create_response(jsonify({
+                'message': 'Unauthorized'
+            })), 400
+        loc = UserLocation.query.filter(UserLocation.email == current_user.email).first()
+
+        return jsonify({
+            'message': 'Success',
+            'location': {
+                'latitude': loc.latitude,
+                'longitude': loc.longitude
+            }
+        })
+    
+    @staticmethod
+    def bp_post_location():
+        if current_user.is_anonymous:
+            return ProfileBP.create_response(jsonify({
+                'message': 'Unauthorized'
+            })), 400
+        items = request.get_json()
+        latitude = items.get('latitude')
+        longitude = items.get('longitude')
+        if latitude is None or longitude is None:
+            return ProfileBP.create_response(jsonify({
+                'message': 'Bad request'
+            })), 400
+        try:
+            latitude = float(latitude)
+            longitude = float(longitude)
+        except ValueError:
+            return ProfileBP.create_response(jsonify({
+                'message': 'Bad request'
+            })), 400
+        loc = UserLocation.query.filter(UserLocation.email == current_user.email).first()
+        loc.latitude = latitude
+        loc.longitude = longitude
+        ProfileBP.db()['session'].commit()
+        return ProfileBP.create_response(jsonify({
+            'message': 'success'
+        })), 200
 
 
 
@@ -384,6 +417,7 @@ def get_blur_level(user: int, user2: int=None) -> int:
         ).all()
     )
     return max(0, 20 - num_messages)
+
 
 def calculate_distance(first_pt: dict, second_pt: dict) -> float:
     """
