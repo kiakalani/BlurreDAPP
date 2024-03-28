@@ -51,8 +51,10 @@ class SwipeBP(abstracts.BP):
             )
         ).filter(
             and_(
-                today.year - extract('year', auth.User.birthday) <= preferences.age,
-                today.year - extract('year', auth.User.birthday) >= preferences.min_age
+                and_(
+                    today.year - extract('year', auth.User.birthday) <= preferences.age,
+                    today.year - extract('year', auth.User.birthday) >= preferences.min_age
+                ),
                 and_(
                     exists().where(
                         and_(
@@ -81,7 +83,6 @@ class SwipeBP(abstracts.BP):
                         
                     )
                 )
-                
             )
         ).all()
         return [u.id for u in users]
