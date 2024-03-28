@@ -36,6 +36,9 @@ class SwipeBP(abstracts.BP):
         preferences: profile_imp.ProfilePreference = profile_imp.ProfilePreference.query.filter(
             profile_imp.ProfilePreference.email == current_user.email
         ).first()
+        location: profile_imp.UserLocation = profile_imp.UserLocation.query.filter(
+            profile_imp.UserLocation.email == current_user.email
+        ).first()
         users = SwipeBP.db()['session'].query(auth.User).filter(
             and_(
                 auth.User.id != current_user.id,
@@ -49,21 +52,35 @@ class SwipeBP(abstracts.BP):
         ).filter(
             and_(
                 today.year - extract('year', auth.User.birthday) <= preferences.age,
-                exists().where(
-                    and_(
+                and_(
+                    exists().where(
                         and_(
-                            profile_imp.Profile.email == auth.User.email,
+                            and_(
+                                profile_imp.Profile.email == auth.User.email,
+                                or_(
+                                    profile_imp.Profile.orientation == preferences.orientation,
+                                    preferences.orientation == 'Everyone'
+                                )
+                            ),
                             or_(
                                 profile_imp.Profile.orientation == preferences.orientation,
                                 preferences.orientation == 'Everyone'
                             )
                         ),
-                        or_(
-                            profile_imp.Profile.orientation == preferences.orientation,
-                            preferences.orientation == 'Everyone'
+                    ),
+                    exists().where(
+                        and_(
+                            profile_imp.UserLocation.email == auth.User.email,
+                            math.acos(
+                                math.sin(math.radians(location.latitude)) * math.sin(math.radians(profile_imp.UserLocation.latitude)) +
+                                math.cos(math.radians(location.latitude)) * math.cos(math.radians(profile_imp.UserLocation.latitude)) *
+                                math.cos(math.radians(profile_imp.UserLocation.longitude - location.longitude))
+                            ) * 6371 <= preferences.distance 
                         )
+                        
                     )
                 )
+                
             )
         ).all()
         return [u.id for u in users]
@@ -105,7 +122,6 @@ class SwipeBP(abstracts.BP):
             })), 400
         ids = SwipeBP.create_filter_query()
         ids = ids[:10]
-        print(ids, 'is the id')
         return SwipeBP.create_response(jsonify({
             'message': 'Success',
             'ids': ids

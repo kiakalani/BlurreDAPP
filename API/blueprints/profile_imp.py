@@ -258,6 +258,12 @@ class ProfileBP(abstracts.BP):
             ret_dict[k] = images[k]
         ret_dict['name'] = user.name
         ret_dict['age'] = auth.get_age(user.birthday)
+        first_loc: UserLocation = UserLocation.query.filter(UserLocation.email == current_user.email).first()
+        second_loc: UserLocation = UserLocation.query.filter(UserLocation.email == user.email).first()
+        ret_dict['distance'] = calculate_distance(
+            {'latitude':first_loc.latitude, 'longitude': first_loc.longitude},
+            {'latitude':second_loc.latitude, 'longitude': second_loc.longitude}
+        )
         return ProfileBP.create_response(jsonify({
             'message': 'Success',
             'profile': ret_dict
