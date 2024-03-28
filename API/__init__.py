@@ -47,7 +47,7 @@ class FlaskApp:
         def rm_sess(exception=None):
             if app.config['DB'].get('destroy'):
                 app.config['DB']['destroy']()
-        self.__setup_additional_funcs()
+        # self.__setup_additional_funcs()
 
     def __setup_socketio(self) -> None:
         """

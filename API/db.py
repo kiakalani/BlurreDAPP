@@ -1,4 +1,5 @@
 import os
+import math
 from typing import TypedDict
 
 from flask import Flask, current_app
@@ -13,7 +14,6 @@ class DBComps(TypedDict):
     engine: Engine
     session: Session
     base: DeclarativeBase
-    raw_connection: PoolProxiedConnection
     destroy: any
 
 def init_db(env_name='SQLDB') -> DBComps:
@@ -38,6 +38,10 @@ def init_db(env_name='SQLDB') -> DBComps:
     # Creating the needed variables for the database
     engine = create_engine(f'sqlite:///{path}')
     raw_connection = engine.raw_connection()
+    raw_connection.create_function('cos', 1, math.cos)
+    raw_connection.create_function('sin', 1, math.sin)
+    raw_connection.create_function('acos', 1, math.acos)
+    raw_connection.create_function('radians', 1, math.radians)
     session = scoped_session(sessionmaker(autoflush=False, bind=engine))
     base = declarative_base()
     base.query = session.query_property()
@@ -47,7 +51,6 @@ def init_db(env_name='SQLDB') -> DBComps:
         'session': session,
         'base': base,
         'destroy': lambda : session.remove(),
-        'raw_connection': raw_connection
     }
 
 
