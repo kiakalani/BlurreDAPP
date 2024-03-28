@@ -1,7 +1,7 @@
 import math
 from flask import jsonify, current_app, request
 from flask_login import current_user
-from sqlalchemy import Column, Integer, String, and_, or_, text, exists, extract
+from sqlalchemy import Column, Integer, String, and_, or_, text, exists, extract, func
 
 import blueprints.auth as auth
 import blueprints.matches as matches
@@ -71,10 +71,10 @@ class SwipeBP(abstracts.BP):
                     exists().where(
                         and_(
                             profile_imp.UserLocation.email == auth.User.email,
-                            math.acos(
-                                math.sin(math.radians(location.latitude)) * math.sin(math.radians(profile_imp.UserLocation.latitude)) +
-                                math.cos(math.radians(location.latitude)) * math.cos(math.radians(profile_imp.UserLocation.latitude)) *
-                                math.cos(math.radians(profile_imp.UserLocation.longitude - location.longitude))
+                            func.acos(
+                                func.sin(func.radians(location.latitude)) * func.sin(func.radians(profile_imp.UserLocation.latitude)) +
+                                func.cos(func.radians(location.latitude)) * func.cos(func.radians(profile_imp.UserLocation.latitude)) *
+                                func.cos(func.radians(profile_imp.UserLocation.longitude - location.longitude))
                             ) * 6371 <= preferences.distance 
                         )
                         
