@@ -336,7 +336,7 @@ class ProfileBP(abstracts.BP):
         for key, value in ProfileBP.preference_valid_checks().items():
             valid = json_items.get(key)
             if valid:
-                valid = valid(value)
+                valid = value(valid)
                 # setting the attribute if valid
                 if valid:
                     setattr(preference, key, valid)
