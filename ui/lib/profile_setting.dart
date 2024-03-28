@@ -377,6 +377,8 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                         }).then((resp) => {
                           if (resp.statusCode == 200) {
                             // Successfully modified
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (context) => const HomePage()))
                           }
                         });
                       }

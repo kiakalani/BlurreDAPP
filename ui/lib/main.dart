@@ -6,6 +6,7 @@ import 'package:ui/messages.dart';
 import 'package:ui/profile_setting.dart';
 import 'swipe.dart';
 import 'login.dart';
+import 'preferences.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:ui/sock.dart';
 
@@ -65,6 +66,12 @@ class _HomePageState extends State<HomePage> {
             onPressed: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const ProfileSettingsPage())),
             child: const Text('Profile Settings',
+                style: TextStyle(color: Colors.black)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const PreferencePage())),
+            child: const Text('Preferences',
                 style: TextStyle(color: Colors.black)),
           ),
           TextButton(
