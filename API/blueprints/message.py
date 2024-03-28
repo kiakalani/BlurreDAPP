@@ -114,7 +114,8 @@ class Message(abstracts.BP):
                     for m in msgs:
                         m.read = True
                     Message.db()['session'].commit()
-                    sock.emit('seen_last', {'user': current_user.id}, room=Message.sock_sids()[user.id])
+                    if Message.sock_sids().get(user.id):
+                        sock.emit('seen_last', {'user': current_user.id}, room=Message.sock_sids()[user.id])
             
                     
 
