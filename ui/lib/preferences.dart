@@ -52,20 +52,8 @@ class PreferencePageState extends State<PreferencePage> {
   
   @override
   Widget build(BuildContext context) {
-    Authorization().isLoggedIn().then((logged_in) => {
-      if (!logged_in){
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => const HomePage()))
-      }
-    });
-
-    double fieldWidth =
-        MediaQuery.of(context).size.width * 0.3; // 30% of screen width
-    if (kIsWeb) {
-      fieldWidth = MediaQuery.of(context).size.width * 0.3;
-    } else if (Platform.isIOS || Platform.isAndroid) {
-      fieldWidth = MediaQuery.of(context).size.width * 0.8;
-    }
+    Authorization().checkLogin(context);
+    double fieldWidth = MyApp.getFieldWidth(context);
 
     return Scaffold(
       appBar: AppBar(

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as developer;
 import 'package:ui/auth.dart';
@@ -9,6 +10,7 @@ import 'login.dart';
 import 'preferences.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:ui/sock.dart';
+import 'dart:io';
 
 Future<String> readBase64Image(String assetPath) async {
   return await rootBundle.loadString(assetPath);
@@ -20,6 +22,22 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+
+  // get field width for the application
+  static double getFieldWidth(BuildContext context) {
+    // default - 40% of screen width
+    double fieldWidth = MediaQuery.of(context).size.width * 0.4; 
+    // 40% of screen width for web application
+    if (kIsWeb) {
+      fieldWidth = MediaQuery.of(context).size.width * 0.4;
+    } 
+    // 80% of screen width for IOS and Android
+    else if (Platform.isIOS || Platform.isAndroid) {
+      fieldWidth = MediaQuery.of(context).size.width * 0.8;
+    }
+    return fieldWidth;
+  }
+
   const MyApp({super.key});
 
   @override

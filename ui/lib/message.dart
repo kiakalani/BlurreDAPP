@@ -144,6 +144,7 @@ class MessagePageState extends State<MessagePage> {
 
   @override
   Widget build(BuildContext context) {
+    Authorization().checkLogin(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.otherUserName),

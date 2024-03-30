@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:ui/auth.dart';
 import 'dart:convert';
 import 'dart:io';
+import 'package:ui/main.dart';
 
 
 class ProfileDetailsPage extends StatefulWidget {
@@ -93,13 +94,9 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    double fieldWidth =
-        MediaQuery.of(context).size.width * 0.4; // 40% of screen width
-    if (kIsWeb) {
-      fieldWidth = MediaQuery.of(context).size.width * 0.4;
-    } else if (Platform.isIOS || Platform.isAndroid) {
-      fieldWidth = MediaQuery.of(context).size.width * 0.8;
-    }
+    Authorization().checkLogin(context);
+    double fieldWidth = MyApp.getFieldWidth(context);
+
     return Scaffold(
         appBar: AppBar(
           title: const Text('Profile Details'),

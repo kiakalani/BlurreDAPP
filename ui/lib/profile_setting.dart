@@ -93,20 +93,8 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    Authorization().isLoggedIn().then((logged_in) => {
-          if (!logged_in)
-            {
-              Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => const HomePage()))
-            }
-        });
-    double fieldWidth =
-        MediaQuery.of(context).size.width * 0.3; // 30% of screen width
-    if (kIsWeb) {
-      fieldWidth = MediaQuery.of(context).size.width * 0.3;
-    } else if (Platform.isIOS || Platform.isAndroid) {
-      fieldWidth = MediaQuery.of(context).size.width * 0.8;
-    }
+    Authorization().checkLogin(context);
+    double fieldWidth = MyApp.getFieldWidth(context);
     double gridSpacing = 10; 
     // the size for each square
     double squareSize = (fieldWidth - gridSpacing) / 2;

@@ -68,13 +68,9 @@ class SignupPageState extends State<SignupPage> {
 
   @override
   Widget build(BuildContext context) {
-    double fieldWidth =
-      MediaQuery.of(context).size.width * 0.3; // 30% of screen width
-    if (kIsWeb) {
-      fieldWidth = MediaQuery.of(context).size.width * 0.3;
-    } else if (Platform.isIOS || Platform.isAndroid) {
-      fieldWidth = MediaQuery.of(context).size.width * 0.8;
-    }
+    Authorization().checkLogin(context);
+    double fieldWidth = MyApp.getFieldWidth(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Signup'),
