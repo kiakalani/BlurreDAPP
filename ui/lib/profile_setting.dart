@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
@@ -18,22 +17,26 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
   // For storing up to 4 images
   final List<Uint8List?> _imageBytesList = List.filled(4, null);
   final ImagePicker _picker = ImagePicker();
+  final Map<String, List<String>> validSettings = {
+    'gender': ['Male', 'Female', 'Other'],
+    'orientation': ['Straight', 'Gay', 'Lesbian', 'Bisexual', 'Asexual', 'Other'],
+    'looking_for': ['A relationship', 'Something casual', 'New friends', 'Not sure yet', 'Prefer not to say'],
+    'exercise': ['Everyday', 'Often', 'Sometimes', 'Never'],
+    'star_sign': ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'],
+    'drinking': ['Frequently', 'Socially', 'Rarely', 'Never'],
+    'smoking': ['Socially', 'Never', 'Regularly', 'Trying to quit'],
+    'religion': ['None', 'Agnostic', 'Atheist', 'Buddhist', 'Catholic', 'Christian', 'Hindu', 'Jain', 'Jewish', 'Mormon', 'Latter-day Saint', 'Muslim', 'Zoroastrian', 'Sikh', 'Spiritual', 'Other', 'Prefer not to say'],
+    'height': [for (int i = 110; i < 221; i++) i.toString()]
+  };
   // Selected option for profile settings
-  String? _gender, _sexOrientation, _lookingFor, _exercise, _starSign, _drinking, _smoking, _religion;
-  // Dropdown options for profile settings
-  final List<String> _genders = ['Male', 'Female', 'Other'];
-  final List<String> _orientations = ['Straight', 'Gay', 'Lesbian', 'Bisexual', 'Asexual', 'Other'];
-  final List<String> _lookingFors = ['A relationship', 'Something casual', 'New friends', 'Not sure yet', 'Prefer not to say'];
-  final List<String> _exercises = ['Everyday', 'Often', 'Sometimes', 'Never'];
-  final List<String> _starSigns = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
-  final List<String> _drinkings = ['Frequently', 'Socially', 'Rarely', 'Never'];
-  final List<String> _smokings = ['Socially', 'Never', 'Regularly', 'Trying to quit']; 
-  final List<String> _religions = ['None', 'Agnostic', 'Atheist', 'Buddhist', 'Catholic', 'Christian', 'Hindu', 'Jain', 'Jewish', 'Mormon', 'Latter-day Saint', 'Muslim', 'Zoroastrian', 'Sikh', 'Spiritual', 'Other', 'Prefer not to say'];
-  final _heightController = TextEditingController();
+  Map<String, String?> settings = {};
   final _bioController = TextEditingController();
 
   @override
   void initState() {
+    for (var key in validSettings.keys) {
+      settings[key] = null;
+    }
     super.initState();
     // Initialize profile details 
     _fetchProfileSettings();
@@ -43,38 +46,21 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
     Authorization().getRequest("/profile/").then((value) {
       final responseBody = json.decode(value.toString());
       if (responseBody['profile'] != null) {
-            final String picture1 = responseBody['profile']['picture1'] ?? '';
-            final String picture2 = responseBody['profile']['picture2'] ?? '';
-            final String picture3 = responseBody['profile']['picture3'] ?? '';
-            final String picture4 = responseBody['profile']['picture4'] ?? '';
-            final String bio = responseBody['profile']['bio'] ?? '';
-            String height = '';
-            if (responseBody['profile']['height'] != null) {
-              height = responseBody['profile']['height'].toString();
-            }
-            final String? gender = responseBody['profile']['gender'];
-            final String? sexOrientation = responseBody['profile']['orientation'];
-            final String? lookingFor = responseBody['profile']['looking_for'];
-            final String? exercise = responseBody['profile']['exercise'];
-            final String? starSign = responseBody['profile']['star_sign'];
-            final String? drinking = responseBody['profile']['drinking'];
-            final String? smoking = responseBody['profile']['smoking'];
-            final String? religion = responseBody['profile']['religion'];
             setState(() {
-              _imageBytesList[0] = picture1 == '' ? null : base64Decode(picture1);
-              _imageBytesList[1] = picture2 == '' ? null : base64Decode(picture2);
-              _imageBytesList[2] = picture3 == '' ? null : base64Decode(picture3);
-              _imageBytesList[3] = picture4 == '' ? null : base64Decode(picture4);
-              _bioController.text = bio;
-              _heightController.text = height;
-              _gender = gender;
-              _sexOrientation = sexOrientation;
-              _lookingFor = lookingFor;
-              _exercise = exercise;
-              _starSign = starSign;
-              _drinking = drinking;
-              _smoking = smoking;
-              _religion = religion;
+              for (var key in settings.keys) {
+                if (responseBody['profile'][key] != null) {
+                  settings[key] = responseBody['profile'][key].toString();
+                }
+              }
+              if (responseBody['profile']['bio'] != null) {
+                _bioController.text = responseBody['profile']['bio'];
+              }
+              for (int i = 1; i < 5; ++i) {
+                String? pic = responseBody['profile']['picture$i'];
+                if (pic != null) {
+                  _imageBytesList[i - 1] = base64Decode(pic);
+                }
+              }
             });
       }
     });
@@ -86,9 +72,33 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
     if (pickedFile != null) {
       final Uint8List imageBytes = await pickedFile.readAsBytes();
       setState(() {
-        _imageBytesList[index] = imageBytes; // Update the specific image in the list
+        // Update the specific image in the list
+        _imageBytesList[index] = imageBytes; 
       });
     }
+  }
+
+  List<SetDropdownMenu<String>> getSettingItems(double fieldWidth) {
+    List<SetDropdownMenu<String>> retList = [];
+    for (var key in validSettings.keys) {
+      retList.add(
+        SetDropdownMenu<String>(
+          selectedValue: settings[key] ?? validSettings[key]![0],
+          items: validSettings[key]!,
+          fieldWidth: fieldWidth,
+          labelText: ((key[0]).toUpperCase() + key.substring(1)).replaceAll('_', ' '),
+          onChanged: (String? newValue) => {
+            setState(() => {
+              if (newValue != null) {
+                settings[key] = newValue
+              }
+            })
+          },
+        )
+      );
+      
+    }
+    return retList;
   }
 
   @override
@@ -97,7 +107,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
     double fieldWidth = MyApp.getFieldWidth(context);
     double gridSpacing = 10; 
     // the size for each square
-    double squareSize = (fieldWidth - gridSpacing) / 2;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile Settings'),
@@ -130,8 +140,6 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                         return InkWell(
                           onTap: () => _pickImage(index),
                             child: Container(
-                              width: squareSize,
-                              height: squareSize,
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
                                 color: _imageBytesList[index] == null ? Colors.grey : null,
@@ -158,210 +166,25 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                     child: TextFormField(
                       controller: _bioController,
                       decoration: const InputDecoration(labelText: 'Bio'),
-                      maxLines: null, // Allows the input to expand as much as needed
+                      maxLines: null, 
                       keyboardType: TextInputType.multiline,
                     ),
                   ),
                   const SizedBox(height: 20),
-
-                  // Height field
-                  SizedBox(
-                    width: fieldWidth,
-                    child: TextFormField(
-                      controller: _heightController,
-                      decoration: const InputDecoration(labelText: 'Height (cm)'),
-                      keyboardType: TextInputType.number, // Ensures numeric keyboard
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Gender field
-                  SizedBox(
-                    width: fieldWidth,
-                    child: DropdownButtonFormField(
-                      value: _gender,
-                      decoration: const InputDecoration(labelText: 'Gender'),
-                      items: _genders.map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _gender = newValue!;
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Sex Orientation field
-                  SizedBox(
-                    width: fieldWidth,
-                    child: DropdownButtonFormField(
-                      value: _sexOrientation,
-                      decoration: const InputDecoration(labelText: 'Sex Orientation'),
-                      items: _orientations.map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _sexOrientation = newValue!;
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // Looking for field
-                  SizedBox(
-                    width: fieldWidth,
-                    child: DropdownButtonFormField(
-                      value: _lookingFor,
-                      decoration: const InputDecoration(labelText: 'Looking for'),
-                      items: _lookingFors.map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _lookingFor = newValue!;
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Exercise field
-                  SizedBox(
-                    width: fieldWidth,
-                    child: DropdownButtonFormField(
-                      value: _exercise,
-                      decoration: const InputDecoration(labelText: 'Exercise'),
-                      items: _exercises.map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _exercise = newValue!;
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // Star sign field
-                  SizedBox(
-                    width: fieldWidth,
-                    child: DropdownButtonFormField(
-                      value: _starSign,
-                      decoration: const InputDecoration(labelText: 'Star sign'),
-                      items: _starSigns.map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _starSign = newValue!;
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Drinking field
-                  SizedBox(
-                    width: fieldWidth,
-                    child: DropdownButtonFormField(
-                      value: _drinking,
-                      decoration: const InputDecoration(labelText: 'Drinking'),
-                      items: _drinkings.map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _drinking = newValue!;
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // Smoking field
-                  SizedBox(
-                    width: fieldWidth,
-                    child: DropdownButtonFormField(
-                      value: _smoking,
-                      decoration: const InputDecoration(labelText: 'Smoking'),
-                      items: _smokings.map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _smoking = newValue!;
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // Religion field
-                  SizedBox(
-                    width: fieldWidth,
-                    child: DropdownButtonFormField(
-                      value: _religion,
-                      decoration: const InputDecoration(labelText: 'Religion'),
-                      items: _religions.map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _religion = newValue!;
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  
+                  ...getSettingItems(fieldWidth),
                   ElevatedButton(
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
                         _formKey.currentState!.save();
+                        print(_bioController.text + ' is the text!');
                         Authorization().postRequest('/profile/', {
-                          'gender': _gender,
-                          'orientation': _sexOrientation,
-                          'looking_for': _lookingFor,
-                          'height': _heightController.text,
                           'bio': _bioController.text,
-                          'star_sign': _starSign,
-                          'exercise': _exercise,
-                          'drinking': _drinking,
-                          'smoking': _smoking,
-                          'religion': _religion,
+                          ...settings,
                           'picture1': _imageBytesList[0] != null ? base64.encode(_imageBytesList[0]!) : null,
                           'picture2': _imageBytesList[1] != null ? base64.encode(_imageBytesList[1]!) : null,
                           'picture3': _imageBytesList[2] != null ? base64.encode(_imageBytesList[2]!) : null,
                           'picture4': _imageBytesList[3] != null ? base64.encode(_imageBytesList[3]!) : null,
+                          
                         }).then((resp) => {
                           if (resp.statusCode == 200) {
                             // Successfully modified
@@ -379,6 +202,47 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class SetDropdownMenu<T> extends StatelessWidget {
+  final T? selectedValue;
+  final List<T> items;
+  final String labelText;
+  final double fieldWidth;
+  final void Function(T? newValue)? onChanged;
+
+  const SetDropdownMenu({
+    Key? key,
+    this.selectedValue,
+    required this.items,
+    required this.labelText,
+    required this.fieldWidth,
+    this.onChanged,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SizedBox(
+          width: fieldWidth,
+          child: DropdownButtonFormField<T>(
+            value: selectedValue,
+            decoration: InputDecoration(labelText: labelText),
+            items: items.map<DropdownMenuItem<T>>((T value) {
+              return DropdownMenuItem<T>(
+                value: value,
+                child: Text(value.toString()),
+              );
+            }).toList(),
+            onChanged: onChanged,
+          ),
+        ),
+        const SizedBox(height: 20),
+      ],
     );
   }
 }

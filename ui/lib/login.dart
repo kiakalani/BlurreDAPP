@@ -26,7 +26,6 @@ class LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    Authorization().checkLogin(context);
     double fieldWidth = MyApp.getFieldWidth(context);
 
     return Scaffold(
