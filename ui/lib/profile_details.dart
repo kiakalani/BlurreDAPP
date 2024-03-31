@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:ui/auth.dart';
 import 'dart:convert';
+import 'dart:io';
+import 'package:ui/main.dart';
+
 
 class ProfileDetailsPage extends StatefulWidget {
   final String currentUserId;
@@ -91,6 +94,9 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
+    Authorization().checkLogin(context);
+    double fieldWidth = MyApp.getFieldWidth(context);
+
     return Scaffold(
         appBar: AppBar(
           title: const Text('Profile Details'),
@@ -132,26 +138,36 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
                           fontSize: 24, fontWeight: FontWeight.bold),
                           textAlign: TextAlign.center,
                       ),
-                      Text(
-                        '${_distance?.toString() ?? 'N/A'} km away',
-                        style: const TextStyle(fontSize: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          const Icon(
+                            Icons.location_on,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            '${_distance?.toString() ?? 'N/A'} km away',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                        ],
                       ),
                     ],
                   )
                 ),
               ),
-              Align(
-                alignment: Alignment.center,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              SizedBox(
+                width: fieldWidth,
+                child: Align(
+                  alignment: Alignment.center,
                   child: Text(
                     _bio ?? 'N/A',
                     style: const TextStyle(
-                        fontSize: 18, color: Color.fromARGB(255, 35, 11, 220)),
+                      fontSize: 18, color: Color.fromARGB(255, 35, 11, 220)),
                     textAlign: TextAlign.left,
                   ),
-                )
-              ),
+                ),
+              ),         
               const SizedBox(height: 10),
               Align(
                 alignment: Alignment.center,

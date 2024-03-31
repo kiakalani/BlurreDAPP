@@ -2,7 +2,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
+import 'package:flutter/material.dart';
 import 'package:ui/location.dart';
+import 'package:ui/main.dart';
 import 'package:ui/sock.dart';
 import 'http_client_adapter.dart'; // Make sure to import the conditional adapter file
 
@@ -59,5 +61,15 @@ class Authorization {
       return true;
     }
     return false;
+  }
+
+  void checkLogin(BuildContext context) {
+    isLoggedIn().then((value) => {
+      if (!value) {
+
+        Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const HomePage()))
+      }
+    });
   }
 }

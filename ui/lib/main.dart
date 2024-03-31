@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as developer;
 import 'package:ui/auth.dart';
@@ -6,8 +7,10 @@ import 'package:ui/messages.dart';
 import 'package:ui/profile_setting.dart';
 import 'swipe.dart';
 import 'login.dart';
+import 'preferences.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:ui/sock.dart';
+import 'dart:io';
 
 Future<String> readBase64Image(String assetPath) async {
   return await rootBundle.loadString(assetPath);
@@ -19,6 +22,22 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+
+  // get field width for the application
+  static double getFieldWidth(BuildContext context) {
+    // default - 40% of screen width
+    double fieldWidth = MediaQuery.of(context).size.width * 0.4; 
+    // 40% of screen width for web application
+    if (kIsWeb) {
+      fieldWidth = MediaQuery.of(context).size.width * 0.4;
+    } 
+    // 80% of screen width for IOS and Android
+    else if (Platform.isIOS || Platform.isAndroid) {
+      fieldWidth = MediaQuery.of(context).size.width * 0.8;
+    }
+    return fieldWidth;
+  }
+
   const MyApp({super.key});
 
   @override
@@ -62,9 +81,21 @@ class _HomePageState extends State<HomePage> {
                 const Text('Messages', style: TextStyle(color: Colors.black)),
           ),
           TextButton(
-            onPressed: () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const ProfileSettingsPage())),
+            onPressed: () => {
+              ProfileSettingsPage.getPage().then((value) => {
+                if (value != null) {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => value))
+                }
+              })
+            },/*Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const ProfileSettingsPage())),*/
             child: const Text('Profile Settings',
+                style: TextStyle(color: Colors.black)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const PreferencePage())),
+            child: const Text('Preferences',
                 style: TextStyle(color: Colors.black)),
           ),
           TextButton(

@@ -26,20 +26,8 @@ class LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    Authorization().isLoggedIn().then((logged_in) => {
-          if (logged_in)
-            {
-              Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => const HomePage()))
-            }
-        });
-    double fieldWidth =
-        MediaQuery.of(context).size.width * 0.3; // 30% of screen width
-    if (kIsWeb) {
-      fieldWidth = MediaQuery.of(context).size.width * 0.3;
-    } else if (Platform.isIOS || Platform.isAndroid) {
-      fieldWidth = MediaQuery.of(context).size.width * 0.8;
-    }
+    double fieldWidth = MyApp.getFieldWidth(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Login'),
@@ -177,7 +165,7 @@ class LoginSuccessfullyPage extends StatelessWidget {
         child: TextButton(
           onPressed: () => {
             Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const ProfileSettingsPage()))
+                MaterialPageRoute(builder: (_) => ProfileSettingsPage()))
           },
           child: const Text('Profile Setting'),
         ),

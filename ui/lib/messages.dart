@@ -37,12 +37,7 @@ class MessagesPageState extends State<MessagesPage> {
 
   @override
   Widget build(BuildContext context) {
-    Authorization().isLoggedIn().then((logged_in) => {
-      if (!logged_in) {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const HomePage()))
-        }
-    });
+    Authorization().checkLogin(context);
     final usersList = usersData.entries.map((entry) {
       return {
         'userId': entry.key,
