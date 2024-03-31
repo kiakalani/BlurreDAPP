@@ -39,7 +39,6 @@ class SwipeBP(abstracts.BP):
         location: profile_imp.UserLocation = profile_imp.UserLocation.query.filter(
             profile_imp.UserLocation.email == current_user.email
         ).first()
-        age = today.year - extract('year', auth.User.birthday)
         users = SwipeBP.db()['session'].query(auth.User).filter(
             and_(
                 auth.User.id != current_user.id,
@@ -52,7 +51,7 @@ class SwipeBP(abstracts.BP):
             )
         ).filter(
             and_(
-                preferences.min_age <= age <= preferences.age,
+                preferences.min_age + today.year <= extract('year', auth.User.birthday) <= preferences.age + today.year,
                 and_(
                     exists().where(
                         and_(
