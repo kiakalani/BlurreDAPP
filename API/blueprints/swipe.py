@@ -52,10 +52,7 @@ class SwipeBP(abstracts.BP):
             )
         ).filter(
             and_(
-                and_(
-                    age <= preferences.age,
-                    age >= preferences.min_age
-                ),
+                preferences.min_age <= age <= preferences.age,
                 and_(
                     exists().where(
                         and_(
