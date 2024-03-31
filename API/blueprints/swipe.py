@@ -51,7 +51,10 @@ class SwipeBP(abstracts.BP):
             )
         ).filter(
             and_(
-                preferences.min_age + today.year <= extract('year', auth.User.birthday) <= preferences.age + today.year,
+                and_(
+                    preferences.min_age + today.year <= extract('year', auth.User.birthday),
+                    extract('year', auth.User.birthday) <= preferences.age + today.year,
+                ),
                 and_(
                     exists().where(
                         and_(
