@@ -75,7 +75,7 @@ class SwipeBP(abstracts.BP):
                         and_(
                             profile_imp.UserLocation.email == auth.User.email,
                             or_(
-                                preferences.distance > 100,
+                                preferences.distance >= 100,
                                 func.acos(
                                     func.sin(func.radians(location.latitude)) * func.sin(func.radians(profile_imp.UserLocation.latitude)) +
                                     func.cos(func.radians(location.latitude)) * func.cos(func.radians(profile_imp.UserLocation.latitude)) *
