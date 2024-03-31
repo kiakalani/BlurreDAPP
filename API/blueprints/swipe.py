@@ -74,13 +74,15 @@ class SwipeBP(abstracts.BP):
                     exists().where(
                         and_(
                             profile_imp.UserLocation.email == auth.User.email,
-                            func.acos(
-                                func.sin(func.radians(location.latitude)) * func.sin(func.radians(profile_imp.UserLocation.latitude)) +
-                                func.cos(func.radians(location.latitude)) * func.cos(func.radians(profile_imp.UserLocation.latitude)) *
-                                func.cos(func.radians(profile_imp.UserLocation.longitude - location.longitude))
-                            ) * 6371 <= preferences.distance 
+                            or_(
+                                preferences.distance >= 100,
+                                func.acos(
+                                    func.sin(func.radians(location.latitude)) * func.sin(func.radians(profile_imp.UserLocation.latitude)) +
+                                    func.cos(func.radians(location.latitude)) * func.cos(func.radians(profile_imp.UserLocation.latitude)) *
+                                    func.cos(func.radians(profile_imp.UserLocation.longitude - location.longitude))
+                                ) * 6371 <= preferences.distance 
+                            )
                         )
-                        
                     )
                 )
             )
