@@ -81,8 +81,14 @@ class _HomePageState extends State<HomePage> {
                 const Text('Messages', style: TextStyle(color: Colors.black)),
           ),
           TextButton(
-            onPressed: () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const ProfileSettingsPage())),
+            onPressed: () => {
+              ProfileSettingsPage.getPage().then((value) => {
+                if (value != null) {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => value))
+                }
+              })
+            },/*Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const ProfileSettingsPage())),*/
             child: const Text('Profile Settings',
                 style: TextStyle(color: Colors.black)),
           ),

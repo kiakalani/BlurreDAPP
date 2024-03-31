@@ -6,8 +6,18 @@ import 'dart:convert';
 import 'auth.dart';
 
 class ProfileSettingsPage extends StatefulWidget {
-  const ProfileSettingsPage({Key? key}) : super(key: key);
-
+  dynamic value;
+  ProfileSettingsPage({Key? key}) : super(key: key);
+  static Future<ProfileSettingsPage?> getPage({Key? key}) async {
+    bool loggedIn = await Authorization().isLoggedIn();
+    dynamic value = await Authorization().getRequest('/profile/');
+    if (loggedIn) {
+      var p = ProfileSettingsPage(key: key);
+      p.value = value;
+      return p;
+    }
+    return null;
+  }
   @override
   ProfileSettingsPageState createState() => ProfileSettingsPageState();
 }
@@ -18,7 +28,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
   final List<Uint8List?> _imageBytesList = List.filled(4, null);
   final ImagePicker _picker = ImagePicker();
   // Valid dropdown optoins for profile settings
-  final Map<String, List<String>> validSettings = {
+  final Map<String, List<String>> _validSettings = {
     'gender': ['Male', 'Female', 'Other'],
     'orientation': ['Straight', 'Gay', 'Lesbian', 'Bisexual', 'Asexual', 'Other'],
     'looking_for': ['A relationship', 'Something casual', 'New friends', 'Not sure yet', 'Prefer not to say'],
@@ -30,7 +40,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
     'height': [for (int i = 110; i < 221; i++) i.toString()]
   };
   // Selected option for profile settings
-  Map<String, String?> settings = {};
+  final Map<String, String?> _settings = {};
   final _bioController = TextEditingController();
 
   @override
@@ -44,21 +54,22 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
   // Initialize settings key to null
   void _initSettings() {
-    for (var key in validSettings.keys) {
-      settings[key] = null;
+    for (var key in _validSettings.keys) {
+      _settings[key] = null;
     }
   }
 
   // fetch profile settings from server
   void _fetchProfileSettings() {
-    Authorization().getRequest("/profile/").then((value) {
+    dynamic value = widget.value;
+    // Authorization().getRequest("/profile/").then((value) {
       final responseBody = json.decode(value.toString());
       if (responseBody['profile'] != null) {
         setState(() {
           // store fetched profile settings to settings
-          for (var key in settings.keys) {
+          for (var key in _settings.keys) {
             if (responseBody['profile'][key] != null) {
-              settings[key] = responseBody['profile'][key].toString();
+              _settings[key] = responseBody['profile'][key].toString();
             }
           }
           // set bio field text
@@ -74,7 +85,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
           }
         });
       }
-    });
+    // });
   }
 
   // pick image from gallery
@@ -92,17 +103,17 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
   // set dropdown options for all dropdown profile settings
   List<SetDropdownMenu<String>> getSettingItems(double fieldWidth) {
     List<SetDropdownMenu<String>> retList = [];
-    for (var key in validSettings.keys) {
+    for (var key in _validSettings.keys) {
       retList.add(
         SetDropdownMenu<String>(
-          selectedValue: settings[key] ?? validSettings[key]![0],
-          items: validSettings[key]!,
+          selectedValue: _settings[key] ?? _validSettings[key]![0],
+          items: _validSettings[key]!,
           fieldWidth: fieldWidth,
           labelText: ((key[0]).toUpperCase() + key.substring(1)).replaceAll('_', ' '),
           onChanged: (String? newValue) => {
             setState(() => {
               if (newValue != null) {
-                settings[key] = newValue
+                _settings[key] = newValue
               }
             })
           },
@@ -116,7 +127,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
   Map<String, dynamic> getProfileData() {
     Map<String, dynamic> profileData = {
       'bio': _bioController.text,
-      ...settings,
+      ..._settings,
       // add profile pictures to profileData
       for (int i = 0; i < _imageBytesList.length; i++) 
         if (_imageBytesList[i] != null) 

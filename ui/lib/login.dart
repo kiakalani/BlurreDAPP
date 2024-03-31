@@ -165,7 +165,7 @@ class LoginSuccessfullyPage extends StatelessWidget {
         child: TextButton(
           onPressed: () => {
             Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const ProfileSettingsPage()))
+                MaterialPageRoute(builder: (_) => ProfileSettingsPage()))
           },
           child: const Text('Profile Setting'),
         ),
