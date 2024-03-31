@@ -17,6 +17,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
   // For storing up to 4 images
   final List<Uint8List?> _imageBytesList = List.filled(4, null);
   final ImagePicker _picker = ImagePicker();
+  // Valid dropdown optoins for profile settings
   final Map<String, List<String>> validSettings = {
     'gender': ['Male', 'Female', 'Other'],
     'orientation': ['Straight', 'Gay', 'Lesbian', 'Bisexual', 'Asexual', 'Other'],
@@ -34,34 +35,44 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
   @override
   void initState() {
-    for (var key in validSettings.keys) {
-      settings[key] = null;
-    }
     super.initState();
+    // Initialize settings keys
+    _initSettings();
     // Initialize profile details 
     _fetchProfileSettings();
   }
 
+  // Initialize settings key to null
+  void _initSettings() {
+    for (var key in validSettings.keys) {
+      settings[key] = null;
+    }
+  }
+
+  // fetch profile settings from server
   void _fetchProfileSettings() {
     Authorization().getRequest("/profile/").then((value) {
       final responseBody = json.decode(value.toString());
       if (responseBody['profile'] != null) {
-            setState(() {
-              for (var key in settings.keys) {
-                if (responseBody['profile'][key] != null) {
-                  settings[key] = responseBody['profile'][key].toString();
-                }
-              }
-              if (responseBody['profile']['bio'] != null) {
-                _bioController.text = responseBody['profile']['bio'];
-              }
-              for (int i = 1; i < 5; ++i) {
-                String? pic = responseBody['profile']['picture$i'];
-                if (pic != null) {
-                  _imageBytesList[i - 1] = base64Decode(pic);
-                }
-              }
-            });
+        setState(() {
+          // store fetched profile settings to settings
+          for (var key in settings.keys) {
+            if (responseBody['profile'][key] != null) {
+              settings[key] = responseBody['profile'][key].toString();
+            }
+          }
+          // set bio field text
+          if (responseBody['profile']['bio'] != null) {
+            _bioController.text = responseBody['profile']['bio'];
+          }
+          // store fetched pictures to imageBytesList
+          for (int i = 1; i < 5; ++i) {
+            String? pic = responseBody['profile']['picture$i'];
+            if (pic != null) {
+              _imageBytesList[i - 1] = base64Decode(pic);
+            }
+          }
+        });
       }
     });
   }
@@ -78,6 +89,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
     }
   }
 
+  // set dropdown options for all dropdown profile settings
   List<SetDropdownMenu<String>> getSettingItems(double fieldWidth) {
     List<SetDropdownMenu<String>> retList = [];
     for (var key in validSettings.keys) {
@@ -96,9 +108,21 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
           },
         )
       );
-      
     }
     return retList;
+  }
+
+  // get selected profile setting values
+  Map<String, dynamic> getProfileData() {
+    Map<String, dynamic> profileData = {
+      'bio': _bioController.text,
+      ...settings,
+      // add profile pictures to profileData
+      for (int i = 0; i < _imageBytesList.length; i++) 
+        if (_imageBytesList[i] != null) 
+          'picture${i+1}': base64.encode(_imageBytesList[i]!)
+    };
+    return profileData;
   }
 
   @override
@@ -106,7 +130,6 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
     Authorization().checkLogin(context);
     double fieldWidth = MyApp.getFieldWidth(context);
     double gridSpacing = 10; 
-    // the size for each square
 
     return Scaffold(
       appBar: AppBar(
@@ -171,21 +194,16 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
                     ),
                   ),
                   const SizedBox(height: 20),
+
+                  // set profile settings dropdown options
                   ...getSettingItems(fieldWidth),
+
+                  // save button
                   ElevatedButton(
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
                         _formKey.currentState!.save();
-                        print(_bioController.text + ' is the text!');
-                        Authorization().postRequest('/profile/', {
-                          'bio': _bioController.text,
-                          ...settings,
-                          'picture1': _imageBytesList[0] != null ? base64.encode(_imageBytesList[0]!) : null,
-                          'picture2': _imageBytesList[1] != null ? base64.encode(_imageBytesList[1]!) : null,
-                          'picture3': _imageBytesList[2] != null ? base64.encode(_imageBytesList[2]!) : null,
-                          'picture4': _imageBytesList[3] != null ? base64.encode(_imageBytesList[3]!) : null,
-                          
-                        }).then((resp) => {
+                        Authorization().postRequest('/profile/', getProfileData()).then((resp) => {
                           if (resp.statusCode == 200) {
                             // Successfully modified
                             Navigator.of(context).push(
