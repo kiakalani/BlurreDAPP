@@ -165,7 +165,7 @@ class PreferencePageState extends State<PreferencePage> {
                         Authorization().postRequest('/profile/preference/', {
                           'gender': _gender,
                           'orientation': _orientation,
-                          'distance': _maxDistnace,
+                          'distance': _maxDistnace.toString(),
                           'min_age': _ageRange.start.toInt().toString(), 
                           'age': _ageRange.end.toInt().toString(), 
                         }).then((resp) => {

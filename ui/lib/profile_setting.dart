@@ -135,7 +135,7 @@ class ProfileSettingsPageState extends State<ProfileSettingsPage> {
     };
     return profileData;
   }
-
+  
   @override
   Widget build(BuildContext context) {
     Authorization().checkLogin(context);
