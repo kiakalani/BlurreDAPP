@@ -1,14 +1,10 @@
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'dart:developer' as developer;
 import 'package:ui/auth.dart';
 import 'package:ui/location.dart';
 import 'package:ui/main.dart';
 import 'package:ui/sock.dart';
-
 import 'signup.dart';
-import 'profile_setting.dart';
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -39,137 +35,104 @@ class LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SizedBox(
-                width: fieldWidth,
-                child: TextField(
-                  controller:
-                      _emailController, // This is now explicitly for the email
-                  decoration: const InputDecoration(
-                    labelText: 'Email', // Clearly mark it as Email
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                ),
-              ),
+              // Email field
+              setEmailField(fieldWidth),
               const SizedBox(height: 20),
-              SizedBox(
-                width: fieldWidth, // Control the width here
-                child: TextFormField(
-                  controller: _passwordController,
-                  obscureText: !_passwordVisible,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _passwordVisible
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _passwordVisible = !_passwordVisible;
-                        });
-                      },
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  Authorization().postRequest("/auth/signin/", {
-                    "email": _emailController.text,
-                    "password": _passwordController.text
-                  }).then((resp) => {
-                        if (resp.statusCode == 200)
-                          {
-                            SocketIO('http://localhost:3001'),
-                            LocationService().update_location(),
-                            Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) => const HomePage()))
-                          }
-                      });
 
-                  developer.log(
-                      'Email: ${_emailController.text}, Password: ${_passwordController.text}',
-                      name: 'LoginPage');
-                },
-                child: const Text(
-                  'Login',
-                  style: TextStyle(
-                    fontSize: 18,
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const SignupPage())),
-                child: const Text('Create your account'),
-              ),
+              // Password field
+              setPasswordField(fieldWidth),
+              const SizedBox(height: 20),
+
+              // Login button
+              _setLoginButton(fieldWidth),
+
+              // Create account
+              _createAccount(fieldWidth)
             ],
           ),
         ),
       ),
     );
   }
-}
 
-class LoginSuccessfullyPage extends StatelessWidget {
-  const LoginSuccessfullyPage({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login Successfully Page'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const LoginPage())),
-              child:
-                  const Text('Log Out', style: TextStyle(color: Colors.white))
-              /*net.postRequest('http://localhost:3001/auth/signout/', {}).then(
-                (resp) => {
-                      if (resp.statusCode == 200)
-                        {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const LoginPage()))
-                        }
-                    })
-            // client.post(
-            //   Uri.parse('http://localhost:3001/auth/signout/'),
-            //   headers: {"Content-Type": "application/json"},
-            // ).then((response) => {
-            //   if (response.statusCode == 200) {
-            //     print(response.body),
-            //     Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginPage()))
-            //   } else {
-            //     print(response.body)
-            //   }
-            // })
-            // http.post(Uri.parse('http://127.0.0.1:5000/auth/signout/')).then((value) => {
-            //   if (value.statusCode == 200) {
-            //     Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginPage()))
-            //   } else {
-            //     developer.log(value.body)
-            //   }
-            // }),*/
+  // Password field
+  Widget setPasswordField(double fieldWidth) {
+    return 
+      SizedBox(
+        width: fieldWidth, 
+        child: TextFormField(
+          controller: _passwordController,
+          obscureText: !_passwordVisible,
+          decoration: InputDecoration(
+            labelText: 'Password',
+            border: const OutlineInputBorder(),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _passwordVisible
+                    ? Icons.visibility
+                    : Icons.visibility_off,
               ),
-        ],
-      ),
-      body: Center(
-        child: TextButton(
-          onPressed: () => {
-            Navigator.push(context,
-                MaterialPageRoute(builder: (_) => ProfileSettingsPage()))
-          },
-          child: const Text('Profile Setting'),
+              onPressed: () {
+                setState(() {
+                  _passwordVisible = !_passwordVisible;
+                });
+              },
+            ),
+          ),
         ),
-      ),
-    );
+      );
+  }
+
+  // Login button
+  Widget _setLoginButton(double fieldWidth) {
+    return       
+      ElevatedButton(
+        onPressed: () {
+          Authorization().postRequest("/auth/signin/", {
+            "email": _emailController.text,
+            "password": _passwordController.text
+          }).then((resp) => {
+            if (resp.statusCode == 200) {
+                SocketIO('http://localhost:3001'),
+                LocationService().update_location(),
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => const HomePage()))
+            }
+          });
+        },
+        child: const Text(
+          'Login',
+          style: TextStyle(
+            fontSize: 18,
+          ),
+        ),
+      );
+  }
+
+  // Create Account filed
+  Widget _createAccount(double fieldWidth) {
+    return      
+      TextButton(
+        onPressed: () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const SignupPage())),
+        child: const Text('Create your account'),
+      );
+  }
+
+  // Email field
+  Widget setEmailField(double fieldWidth) {
+    return 
+      SizedBox(
+        width: fieldWidth,
+        child: TextField(
+          controller:
+              _emailController, 
+          decoration: const InputDecoration(
+            labelText: 'Email',
+            border: OutlineInputBorder(),
+          ),
+          keyboardType: TextInputType.emailAddress,
+        ),
+      );
   }
 }
