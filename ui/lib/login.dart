@@ -36,7 +36,7 @@ class LoginPageState extends State<LoginPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Email field
-              setEmailField(fieldWidth),
+              setEmailField(fieldWidth, _emailController),
               const SizedBox(height: 20),
 
               // Password field
@@ -118,21 +118,20 @@ class LoginPageState extends State<LoginPage> {
         child: const Text('Create your account'),
       );
   }
+}
 
-  // Email field
-  Widget setEmailField(double fieldWidth) {
-    return 
-      SizedBox(
-        width: fieldWidth,
-        child: TextField(
-          controller:
-              _emailController, 
-          decoration: const InputDecoration(
-            labelText: 'Email',
-            border: OutlineInputBorder(),
-          ),
-          keyboardType: TextInputType.emailAddress,
+// Email field
+Widget setEmailField(double fieldWidth, TextEditingController emailController) {
+  return 
+    SizedBox(
+      width: fieldWidth,
+      child: TextField(
+        controller: emailController, 
+        decoration: const InputDecoration(
+          labelText: 'Email',
+          border: OutlineInputBorder(),
         ),
-      );
-  }
+        keyboardType: TextInputType.emailAddress,
+      ),
+    );
 }

@@ -1,10 +1,9 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'dart:developer' as developer;
 import 'package:ui/auth.dart';
 import 'package:ui/main.dart';
+import 'login.dart';
 import 'package:image_picker/image_picker.dart';
 
 class SignupPage extends StatefulWidget {
@@ -12,23 +11,6 @@ class SignupPage extends StatefulWidget {
 
   @override
   SignupPageState createState() => SignupPageState();
-}
-
-class SignupSuccessfullyPage extends StatelessWidget {
-  const SignupSuccessfullyPage({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Signup successfully Page'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: const Center(
-        child: Text('You\'ve signed up successfully.'),
-      ),
-    );
-  }
 }
 
 class SignupPageState extends State<SignupPage> {
@@ -68,7 +50,6 @@ class SignupPageState extends State<SignupPage> {
 
   @override
   Widget build(BuildContext context) {
-    Authorization().checkLogin(context);
     double fieldWidth = MyApp.getFieldWidth(context);
 
     return Scaffold(
@@ -84,197 +65,196 @@ class SignupPageState extends State<SignupPage> {
             children: [
               // Upload photo field
               if (_imageBytes != null) 
-                SizedBox(
-                  width: 100,
-                  height: 100,
-                  child: Image.memory(_imageBytes!),
-                ),
+                _setPhotoField(fieldWidth),
                 const SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: _pickImage,
-                child: const Text('Upload Photo'),
-              ),
+              _setUploadPhotoButton(fieldWidth),
               const SizedBox(height: 20),
                 
               // Name field 
-              SizedBox(
-                width: fieldWidth, // Control the width here
-                child: TextField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Name',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.name,
-                ),
-              ),
+              _setNameField(fieldWidth),
               const SizedBox(height: 20),
 
               // Birthday field 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(                     
-                    width: fieldWidth,
-                    child: TextFormField(
-                      controller: _birthdayController,
-                      decoration: const InputDecoration(
-                        labelText: 'Birthday',
-                        hintText: 'MM-DD-YYYY', // Hint for the expected format
-                        border: OutlineInputBorder(),
-                      ),
-                      readOnly: true,
-                      onTap: () async {
-                        // Open DatePicker
-                        final DateTime? datePick = await showDatePicker(
-                          context: context,
-                          initialDate: DateTime.now(),
-                          firstDate: DateTime(1900),
-                          lastDate: DateTime(2100),
-                        );
-                        if (datePick != null && datePick != birthDate) {
-                          setState(() {
-                            birthDate = datePick;
-                            isDateSelected = true;
-                            // Update the TextField and the birthDateString
-                            birthDateString = "${birthDate.month}-${birthDate.day}-${birthDate.year}"; 
-                            _birthdayController.text = birthDateString; // Display in TextField
-                          });
-                        }
-                      },
-                    ),
-                  ),
-                ],
-              ), 
+              _setBirthdayField(fieldWidth),
               const SizedBox(height: 20),         
 
               // Email field 
-              SizedBox(
-                width: fieldWidth, // Control the width here
-                child: TextField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                ),
-              ),
+              setEmailField(fieldWidth, _emailController),
               const SizedBox(height: 20),
 
               // Password field 
-              SizedBox(
-                width: fieldWidth, // Control the width here
-                child: TextFormField(
-                  controller: _passwordController,
-                  obscureText: !_passwordVisible, 
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _passwordVisible ? Icons.visibility : Icons.visibility_off,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _passwordVisible = !_passwordVisible;
-                        });
-                      },
-                    ),
-                  ),
-                  onChanged: (value) {
-                    if (value.length < 6 && _isPasswordValid) {
-                      setState(() => _isPasswordValid = false);
-                    } else if (value.length >= 6 && !_isPasswordValid) {
-                      setState(() => _isPasswordValid = true);
-                    }
-                  },
-                ),
-              ),
-
-              // Error message display
-              if (! _isPasswordValid) 
-                const Padding(
-                  padding: EdgeInsets.only(top: 8.0),
-                  child: Text(
-                    'Password must consist of least 6 characters.',
-                    style: TextStyle(color: Colors.red, fontSize: 12),
-                  ),
-                ),
+              setPasswordField(fieldWidth, _passwordController, _passwordVisible, "Password", false),
               const SizedBox(height: 20),
 
               // Repeat Password field 
-              SizedBox(
-                width: fieldWidth, // Control the width here
-                child: TextField(
-                  controller: _repeatPasswordController,
-                  obscureText: !_repeatPasswordVisible, 
-                  decoration: InputDecoration(
-                    labelText: 'Repeat Password',
-                    border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _repeatPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _repeatPasswordVisible = !_repeatPasswordVisible;
-                        });
-                      },
-                    ),    
-                  ),
-                ),
-              ),
+              setPasswordField(fieldWidth, _repeatPasswordController, _repeatPasswordVisible, "Repeat Password", true),
               const SizedBox(height: 20),
 
               // Error message display
               if (_displayErrorMessage) 
-                const Padding(
-                  padding: EdgeInsets.only(top: 8.0),
-                  child: Text(
-                    'You must upload your profile picture to register.',
-                    style: TextStyle(color: Colors.red, fontSize: 12),
-                  ),
-                ),
-              const SizedBox(height: 20),
+                setErrorMessage('You must upload your profile picture to register.'),
+                const SizedBox(height: 20),
 
-              ElevatedButton(
-                onPressed: () {
-                  Authorization().postRequest("/auth/signup/", {
-                    "picture1": _imageBytes != null ? base64.encode(_imageBytes!) : null,
-                    "email": _emailController.text,
-                    "name": _nameController.text,
-                    "birthday": birthDateString,
-                    "password": _passwordController.text,
-                    "repeat_password": _repeatPasswordController.text
-                  }).then((value) => {
-                        if (value.statusCode == 200)
-                          {
-                            Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) => const HomePage()))
-                          }
-                        else {
-                          setState(() {
-                            _displayErrorMessage = true;
-                          })                        
-                        }
-                      });
-
-                  developer.log(
-                      'Name: ${_nameController.text}, Email: ${_emailController.text}, Birthday: $birthDateString, Password: ${_passwordController.text}, Repeat Password: ${_repeatPasswordController.text}',
-                      name: 'SignupPage');
-                },
-                child: const Text(
-                  'Sign Up',
-                  style: TextStyle(
-                    fontSize: 18,
-                  ),
-                ),
-              ),
+              // Sign up button
+              _setSignupButton(fieldWidth)
             ],
           ),
         ),
       ),
     );
+  }
+
+  // Upload photo field
+  Widget _setPhotoField(double fieldWidth) {
+    return 
+      SizedBox(
+        width: 100,
+        height: 100,
+        child: Image.memory(_imageBytes!),
+      );
+  }
+
+  // Upload photo field
+  Widget _setUploadPhotoButton(double fieldWidth) {
+    return 
+      ElevatedButton(
+        onPressed: _pickImage,
+        child: const Text('Upload Photo'),
+      );
+  }
+
+  // Name field 
+  Widget _setNameField(double fieldWidth) {
+    return 
+      SizedBox(
+        width: fieldWidth, 
+        child: TextField(
+          controller: _nameController,
+          decoration: const InputDecoration(
+            labelText: 'Name',
+            border: OutlineInputBorder(),
+          ),
+          keyboardType: TextInputType.name,
+        ),
+      );
+  }
+
+  // Birthday field 
+  Widget _setBirthdayField(double fieldWidth) {
+    return
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(                     
+            width: fieldWidth,
+            child: TextFormField(
+              controller: _birthdayController,
+              decoration: const InputDecoration(
+                labelText: 'Birthday',
+                hintText: 'MM-DD-YYYY', // Hint for the expected format
+                border: OutlineInputBorder(),
+              ),
+              readOnly: true,
+              onTap: () async {
+                // Open DatePicker
+                final DateTime? datePick = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(1900),
+                  lastDate: DateTime(2100),
+                );
+                if (datePick != null && datePick != birthDate) {
+                  setState(() {
+                    birthDate = datePick;
+                    isDateSelected = true;
+                    // Update the TextField and the birthDateString
+                    birthDateString = "${birthDate.month}-${birthDate.day}-${birthDate.year}"; 
+                    _birthdayController.text = birthDateString; // Display in TextField
+                  });
+                }
+              },
+            ),
+          ),
+        ],
+      ); 
+  }
+
+  // Password field 
+  Widget setPasswordField(double fieldWidth, TextEditingController passwordController, bool passwordVisible, String displayText, bool isRepeatPassword) {
+    return 
+      SizedBox(
+        width: fieldWidth, 
+        child: TextFormField(
+          controller: passwordController,
+          obscureText: !passwordVisible, 
+          decoration: InputDecoration(
+            labelText: displayText,
+            border: const OutlineInputBorder(),
+            suffixIcon: IconButton(
+              icon: Icon(
+                passwordVisible ? Icons.visibility : Icons.visibility_off,
+              ),
+              onPressed: () {
+                setState(() {
+                  isRepeatPassword ?_repeatPasswordVisible = !passwordVisible : _passwordVisible = !passwordVisible;
+                });
+              },
+            ),
+          ),
+          onChanged: isRepeatPassword ?
+            (value) {
+              if (value.length < 6 && _isPasswordValid) {
+                setState(() => _isPasswordValid = false);
+              } else if (value.length >= 6 && !_isPasswordValid) {
+                setState(() => _isPasswordValid = true);
+              }
+            } : null
+        ),
+      );
+  }
+
+  // Error message field 
+  Widget setErrorMessage(String message) {
+    return 
+      Padding(
+        padding: const EdgeInsets.only(top: 8.0),
+        child: Text(
+          message,
+          style: const TextStyle(color: Colors.red, fontSize: 12),
+        ),
+      );
+  }
+
+  // Sign up button
+  Widget _setSignupButton(double fieldWidth) {
+    return 
+      ElevatedButton(
+        onPressed: () {
+          Authorization().postRequest("/auth/signup/", {
+            "picture1": _imageBytes != null ? base64.encode(_imageBytes!) : null,
+            "email": _emailController.text,
+            "name": _nameController.text,
+            "birthday": birthDateString,
+            "password": _passwordController.text,
+            "repeat_password": _repeatPasswordController.text
+          }).then((value) => {
+            if (value.statusCode == 200) {              
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => const HomePage()))
+            }
+            else {
+              setState(() {
+                _displayErrorMessage = true;
+              })                        
+            }
+          });
+        },
+        child: const Text(
+          'Sign Up',
+          style: TextStyle(
+            fontSize: 18,
+          ),
+        ),
+      );
   }
 }
