@@ -12,15 +12,18 @@ class MessagePage extends StatefulWidget {
   Uint8List? otherUserProfilePicture;
   final String otherUserId;
 
-  MessagePage(
-      {required this.otherUserName,
-      required this.otherUserProfilePicture,
-      required this.otherUserId});
+  MessagePage({
+    Key? key,
+    required this.otherUserName,
+    required this.otherUserProfilePicture,
+    required this.otherUserId
+  }) : super(key: key);
 
   @override
   MessagePageState createState() => MessagePageState();
 }
 
+// Message constructor
 class Message {
   String text;
   // True if the message was sent by the current user
@@ -28,11 +31,12 @@ class Message {
   DateTime timestamp;
   bool seen;
 
-  Message(
-      {required this.text,
-      required this.isCurrentUser,
-      required this.timestamp,
-      required this.seen});
+  Message({
+    required this.text,
+    required this.isCurrentUser,
+    required this.timestamp,
+    required this.seen
+  });
 }
 
 class MessagePageState extends State<MessagePage> {
@@ -47,28 +51,26 @@ class MessagePageState extends State<MessagePage> {
   @override
   void initState() {
     super.initState();
-
-    // _initSocket();
     _fetchAndSetProfilePicture();
   }
 
+  // fetch current user profile picture and id
   void _fetchAndSetProfilePicture() {
     Authorization().getRequest("/profile/").then((value) {
       final responseBody = json.decode(value.toString());
       if (responseBody['profile'] != null &&
           responseBody['profile']['picture1'] != null &&
           responseBody['profile']['id'] != null) {
-        final String base64Image = responseBody['profile']['picture1'];
-        final String currentUserId = responseBody['profile']['id'].toString();
-        _currentUserId = currentUserId;
         setState(() {
-          _currentUserProfilePicture = base64Decode(base64Image);
+          _currentUserProfilePicture = base64Decode(responseBody['profile']['picture1']);
+          _currentUserId = responseBody['profile']['id'].toString();
           _fetchMessages();
         });
       }
     });
   }
 
+  // fetch messages between two users
   void _fetchMessages() {
     Authorization().getRequest("/message/${widget.otherUserId}/").then((value) {
       final responseBody = json.decode(value.toString());
@@ -78,14 +80,16 @@ class MessagePageState extends State<MessagePage> {
         for (var element in messages) {
           String text = element['message'];
           bool isCurrentUser = (element['sender'].toString() == _currentUserId);
-          DateTime d =
-              DateTime.fromMillisecondsSinceEpoch(element['timestamp'] * 1000);
+          DateTime d = DateTime.fromMillisecondsSinceEpoch(element['timestamp'] * 1000);
           bool seen = element['read'].toString() == 'true';
-          texts.add(Message(
-              text: text,
-              isCurrentUser: isCurrentUser,
-              timestamp: d,
-              seen: seen));
+          // store messages in Message format
+          texts.add(
+            Message(
+            text: text,
+            isCurrentUser: isCurrentUser,
+            timestamp: d,
+            seen: seen)
+          );
         }
         setState(() {
           _messages = texts;
@@ -93,29 +97,33 @@ class MessagePageState extends State<MessagePage> {
         SocketIO().emit('seen', {'dest': widget.otherUserId});
       }
     });
-    SocketIO().on(
-        'receive_msg',
-        (p0) => {
-              setState(() {
-                _messages.add(Message(
-                    text: p0['message']['message'],
-                    isCurrentUser: false,
-                    timestamp: DateTime.fromMillisecondsSinceEpoch(
-                        p0['message']['timestamp'] * 1000),
-                    seen: true));
-              }),
-              SocketIO().emit('seen', {'dest': widget.otherUserId}),
-            });
 
+    // Socket for receiving messages
     SocketIO().on(
-        'seen_last',
-        (p0) => {
-              if (p0['user'] != null &&
-                  p0['user'].toString() == widget.otherUserId)
-                {_isSeen = true, setState(() => _isSeen = true)}
-            });
+      'receive_msg',
+      (p0) => {
+        setState(() {
+          _messages.add(Message(
+            text: p0['message']['message'],
+            isCurrentUser: false,
+            timestamp: DateTime.fromMillisecondsSinceEpoch(
+                p0['message']['timestamp'] * 1000),
+            seen: true));
+        }),
+        SocketIO().emit('seen', {'dest': widget.otherUserId}),
+      });
+
+    // Socket for seen functionaility
+    SocketIO().on(
+      'seen_last',
+      (p0) => {
+        if (p0['user'] != null &&
+            p0['user'].toString() == widget.otherUserId)
+          {_isSeen = true, setState(() => _isSeen = true)}
+      });
   }
 
+  // Send message to other user and update the picture of the other user
   void _sendMessage() {
     final String text = _messageController.text.trim();
     if (text.isNotEmpty) {
@@ -138,7 +146,6 @@ class MessagePageState extends State<MessagePage> {
             }),
           });
       _messageController.clear();
-      // send message to the server
     }
   }
 
@@ -148,7 +155,7 @@ class MessagePageState extends State<MessagePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.otherUserName),
-        // once unmatch the user, redirect to message page
+        // Once unmatch the user, redirect to message page
         actions: [
           IconButton(
             icon: const Icon(Icons.cancel),
@@ -156,11 +163,10 @@ class MessagePageState extends State<MessagePage> {
               Authorization().postRequest('/match/unmatch/', {
                 'unmatched': widget.otherUserId
               }).then((resp) => {
-                if (resp.statusCode == 200)
-                  {
-                    Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => const MessagesPage()))
-                  }
+                if (resp.statusCode == 200) {
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => const MessagesPage()))
+                }
               });
             },
           ),
@@ -225,6 +231,7 @@ class MessagePageState extends State<MessagePage> {
                                       ),
                                     ),
                                     const SizedBox(width: 4),
+                                    // Time stamp of the message
                                     Align(
                                         alignment: Alignment.bottomRight,
                                         child: Column(children: [
