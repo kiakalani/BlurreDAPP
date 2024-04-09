@@ -1,6 +1,4 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:ui/main.dart';
 import 'auth.dart';
 import 'dart:convert';
@@ -14,9 +12,12 @@ class PreferencePage extends StatefulWidget {
 
 class PreferencePageState extends State<PreferencePage> {
   final _formKey = GlobalKey<FormState>();
-  // Options available for preferences
-  final List<String> _genders = ['Male', 'Female', 'Other', 'Everyone'];
-  final List<String> _orientations = ['Straight', 'Gay', 'Lesbian', 'Bisexual', 'Asexual', 'Other', 'Everyone'];
+
+  // Valid dropdown options for preferences
+  final Map<String, List<String>> _validPreferences = {
+    'gender': ['Male', 'Female', 'Other', 'Everyone'],
+    'orientation': ['Straight', 'Gay', 'Lesbian', 'Bisexual', 'Asexual', 'Other', 'Everyone']
+  };
 
   // Selected options for preferences
   String? _gender, _orientation;
@@ -26,24 +27,21 @@ class PreferencePageState extends State<PreferencePage> {
   @override
   void initState() {
     super.initState();
-    // Initialize preferences
+    // fetch preferences from database
     _fetchPreferences();
   }
 
+  // fetch preferences from server
   void _fetchPreferences() {
     Authorization().getRequest("/profile/preference/").then((value) {
       final responseBody = json.decode(value.toString());
-      print(responseBody);
       if (responseBody['preferences'] != null) {
-        final String? gender = responseBody['preferences']['gender'];
-        final String? orientation = responseBody['preferences']['orientation'];
-        final int? maxDistance = responseBody['preferences']['distance'];
         final int? minAge = responseBody['preferences']['min_age'];
         final int? maxAge = responseBody['preferences']['age'];
         setState(() {
-          _gender = gender;
-          _orientation = orientation;
-          _maxDistnace = maxDistance;
+          _gender = responseBody['preferences']['gender'];
+          _orientation = responseBody['preferences']['orientation'];
+          _maxDistnace = responseBody['preferences']['distance'];
           _ageRange = RangeValues(minAge!.toDouble(), maxAge!.toDouble());
         });  
       }
@@ -70,44 +68,30 @@ class PreferencePageState extends State<PreferencePage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // Gender preference field
-                  SizedBox(
-                    width: fieldWidth,
-                    child: DropdownButtonFormField(
-                      value: _gender,
-                      decoration: const InputDecoration(labelText: 'Gender'),
-                      items: _genders.map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _gender = newValue!;
-                        });
-                      },
-                    ),
+                  setPreferencesDropdownMenu(
+                    fieldWidth, 
+                    _validPreferences['gender']!,
+                    _gender ?? '', 
+                    'Gender', 
+                    (selectedValue) {
+                      setState(() {
+                        _gender = selectedValue;
+                      });
+                    }
                   ),
                   const SizedBox(height: 20),
 
                   // Sex Orientation field
-                  SizedBox(
-                    width: fieldWidth,
-                    child: DropdownButtonFormField(
-                      value: _orientation,
-                      decoration: const InputDecoration(labelText: 'Sex Orientation'),
-                      items: _orientations.map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _orientation = newValue!;
-                        });
-                      },
-                    ),
+                  setPreferencesDropdownMenu(
+                    fieldWidth, 
+                    _validPreferences['orientation']!,
+                    _orientation ?? '', 
+                    'Sex Orientation', 
+                    (selectedValue) {
+                      setState(() {
+                        _orientation = selectedValue;
+                      });
+                    }
                   ),
                   const SizedBox(height: 20),
 
@@ -185,6 +169,28 @@ class PreferencePageState extends State<PreferencePage> {
           )
         )
       )
+    );
+  }
+
+  // set preferences dropdown list
+  Widget setPreferencesDropdownMenu(double fieldWidth, List<String> options, String selectedValue, String displayText, Function(String) onSelected){
+    return SizedBox(
+      width: fieldWidth,
+      child: DropdownButtonFormField<String>(
+        value: selectedValue,
+        decoration: InputDecoration(labelText: displayText),
+        items: options.map((String value) {
+          return DropdownMenuItem<String>(
+            value: value,
+            child: Text(value),
+          );
+        }).toList(),
+        onChanged: (String? newValue) {
+          if (newValue != null) {
+            onSelected(newValue);
+          }
+        },
+      ),
     );
   }
 }

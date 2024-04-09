@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:ui/auth.dart';
 import 'message.dart';
 import 'dart:convert';
-import 'package:ui/main.dart';
 
 class MessagesPage extends StatefulWidget {
   const MessagesPage({Key? key}) : super(key: key);
@@ -13,7 +12,7 @@ class MessagesPage extends StatefulWidget {
 }
 
 class MessagesPageState extends State<MessagesPage> {
-  Map<String, dynamic> usersData = {};
+  Map<String, dynamic> _usersData = {};
 
   @override
   void initState() {
@@ -22,13 +21,14 @@ class MessagesPageState extends State<MessagesPage> {
     _fetchMatchedUsers();
   }
 
+  // fetch all matched users with current user
   void _fetchMatchedUsers() {
     Authorization().postRequest("/message/", {}).then((value) {
       if (value.statusCode == 200) {
         final responseBody = json.decode(value.toString()); 
          setState(() {
           if (responseBody['info'] != null) {
-            usersData = Map<String, dynamic>.from(responseBody['info']);
+            _usersData = Map<String, dynamic>.from(responseBody['info']);
           }
         });
       }    
@@ -38,7 +38,7 @@ class MessagesPageState extends State<MessagesPage> {
   @override
   Widget build(BuildContext context) {
     Authorization().checkLogin(context);
-    final usersList = usersData.entries.map((entry) {
+    final usersList = _usersData.entries.map((entry) {
       return {
         'userId': entry.key,
         'name': entry.value['name'],
